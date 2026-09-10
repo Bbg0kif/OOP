@@ -5,6 +5,8 @@
 #include "Lab1.h"
 
 #include "module1.h"
+#include "module2.h"
+#include "module3.h"
 #include <string>
 
 static int selectedNumber = 0;
@@ -21,6 +23,48 @@ ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
+
+static void RunWork2(HWND hWnd)
+{
+    while (true)
+    {
+        int firstResult = Func_MOD2(hWnd);
+
+        if (firstResult == -1)
+        {
+            MessageBoxW(
+                hWnd,
+                L"Could not open the first dialog.",
+                L"Error",
+                MB_OK | MB_ICONERROR
+            );
+            return;
+        }
+
+        if (firstResult == 0)
+            return;
+
+        int secondResult = Func_MOD3(hWnd);
+
+        if (secondResult == -1)
+        {
+            MessageBoxW(
+                hWnd,
+                L"Could not open the second dialog.",
+                L"Error",
+                MB_OK | MB_ICONERROR
+            );
+            return;
+        }
+
+        if (secondResult == 2)
+        {
+            continue;
+        }
+
+        return;
+    }
+}
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -159,12 +203,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 break;
             }
             case IDM_WORK2:
-                MessageBoxW(
-                    hWnd,
-                    L"Two dialog boxes with Next and Back buttons.",
-                    L"Work2",
-                    MB_OK | MB_ICONINFORMATION
-                );
+                RunWork2(hWnd);
                 break;
             case IDM_ABOUT:
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);

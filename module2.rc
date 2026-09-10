@@ -1,0 +1,14 @@
+#include <windows.h>
+#include "module2.rh"
+
+IDD_DIALOG_MOD2 DIALOGEX 0, 0, 240, 90
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Work2 - Step 1"
+FONT 9, "Segoe UI"
+BEGIN
+LTEXT "This is the first dialog.", -1, 10, 12, 220, 12
+LTEXT "Click Next to open the second dialog.", -1, 10, 30, 220, 12
+
+DEFPUSHBUTTON "Next >", IDOK, 105, 63, 60, 16
+PUSHBUTTON "Cancel", IDCANCEL, 175, 63, 55, 16
+END

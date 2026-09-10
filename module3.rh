@@ -1,0 +1,4 @@
+#pragma once
+
+#define IDD_DIALOG_MOD3 3001
+#define IDC_BACK_MOD3   3002

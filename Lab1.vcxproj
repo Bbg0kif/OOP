@@ -142,16 +142,22 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="Lab1.h" />
     <ClInclude Include="module1.h" />
+    <ClInclude Include="module2.h" />
+    <ClInclude Include="module3.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Lab1.cpp" />
     <ClCompile Include="module1.cpp" />
+    <ClCompile Include="module2.cpp" />
+    <ClCompile Include="module3.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Lab1.rc" />
     <ResourceCompile Include="module1.rc" />
+    <ResourceCompile Include="module2.rc" />
+    <ResourceCompile Include="module3.rc" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Lab1.ico" />
@@ -159,6 +165,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="module1.rh" />
+    <None Include="module2.rh" />
+    <None Include="module3.rh" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
