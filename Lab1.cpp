@@ -4,6 +4,11 @@
 #include "framework.h"
 #include "Lab1.h"
 
+#include "module1.h"
+#include <string>
+
+static int selectedNumber = 0;
+
 #define MAX_LOADSTRING 100
 
 // Global Variables:
@@ -132,13 +137,27 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             switch (wmId)
             {
             case IDM_WORK1:
-                MessageBoxW(
-                    hWnd,
-                    L"Dialog box for selecting a number from 1 to 100.",
-                    L"Work1",
-                    MB_OK | MB_ICONINFORMATION
-                );
+            {
+                int result = Func_MOD1(hWnd);
+
+                if (result > 0)
+                {
+                    selectedNumber = result;
+
+                    InvalidateRect(hWnd, nullptr, TRUE);
+                }
+                else if (result == -1)
+                {
+                    MessageBoxW(
+                        hWnd,
+                        L"Could not open the number selection dialog.",
+                        L"Error",
+                        MB_OK | MB_ICONERROR
+                    );
+                }
+
                 break;
+            }
             case IDM_WORK2:
                 MessageBoxW(
                     hWnd,
@@ -159,13 +178,27 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         break;
     case WM_PAINT:
+    {
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hWnd, &ps);
+
+        if (selectedNumber > 0)
         {
-            PAINTSTRUCT ps;
-            BeginPaint(hWnd, &ps);
-            // TODO: Add any drawing code here...
-            EndPaint(hWnd, &ps);
+            std::wstring text =
+                L"Selected number: " + std::to_wstring(selectedNumber);
+
+            TextOutW(
+                hdc,
+                20,
+                20,
+                text.c_str(),
+                static_cast<int>(text.length())
+            );
         }
+
+        EndPaint(hWnd, &ps);
         break;
+    }
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
