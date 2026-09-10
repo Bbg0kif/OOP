@@ -131,6 +131,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             // Parse the menu selections:
             switch (wmId)
             {
+            case IDM_WORK1:
+                MessageBoxW(
+                    hWnd,
+                    L"Dialog box for selecting a number from 1 to 100.",
+                    L"Work1",
+                    MB_OK | MB_ICONINFORMATION
+                );
+                break;
+            case IDM_WORK2:
+                MessageBoxW(
+                    hWnd,
+                    L"Two dialog boxes with Next and Back buttons.",
+                    L"Work2",
+                    MB_OK | MB_ICONINFORMATION
+                );
+                break;
             case IDM_ABOUT:
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
                 break;

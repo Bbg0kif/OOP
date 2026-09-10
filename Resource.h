@@ -18,6 +18,8 @@
 #endif
 // Next default values for new objects
 //
+#define IDM_WORK1 40001
+#define IDM_WORK2 40002
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 
