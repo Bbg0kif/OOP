@@ -126,9 +126,9 @@ static INT_PTR CALLBACK DialogProc_MOD1(
         }
         break;
 
-    case WM_CLOSE:
-        EndDialog(hDlg, 0);
-        return TRUE;
+        case WM_CLOSE:
+            EndDialog(hDlg, 0);
+            return TRUE;
     }
 
     return FALSE;
