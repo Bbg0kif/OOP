@@ -139,6 +139,7 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="editor.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Lab2.h" />
     <ClInclude Include="Resource.h" />
@@ -146,6 +147,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="editor.cpp" />
     <ClCompile Include="Lab2.cpp" />
     <ClCompile Include="shape.cpp" />
   </ItemGroup>
