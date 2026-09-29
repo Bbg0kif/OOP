@@ -18,6 +18,13 @@
 #endif
 // Next default values for new objects
 //
+
+// Команди меню вибору геометричного об'єкта.
+#define IDM_POINT       40001
+#define IDM_LINE        40002
+#define IDM_RECTANGLE   40003
+#define IDM_ELLIPSE     40004
+
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 

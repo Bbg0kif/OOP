@@ -131,6 +131,25 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             // Parse the menu selections:
             switch (wmId)
             {
+            case IDM_POINT:
+                // Point input mode is selected.
+                SetWindowTextW(hWnd, L"Lab2 - Point input mode");
+                break;
+
+            case IDM_LINE:
+                // Line input mode is selected.
+                SetWindowTextW(hWnd, L"Lab2 - Line input mode");
+                break;
+
+            case IDM_RECTANGLE:
+                // Rectangle input mode is selected.
+                SetWindowTextW(hWnd, L"Lab2 - Rectangle input mode");
+                break;
+
+            case IDM_ELLIPSE:
+                // Ellipse input mode is selected.
+                SetWindowTextW(hWnd, L"Lab2 - Ellipse input mode");
+                break;
             case IDM_ABOUT:
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
                 break;
