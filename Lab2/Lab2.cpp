@@ -3,6 +3,7 @@
 
 #include "framework.h"
 #include "Lab2.h"
+#include "shape_editor.h"
 
 #define MAX_LOADSTRING 100
 
@@ -10,6 +11,9 @@
 HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
+
+// Manages all shapes and drawing modes.
+ShapeObjectsEditor shapeObjectsEditor;
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -105,6 +109,9 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
       return FALSE;
    }
 
+   // Point input mode is selected by default.
+   SetWindowTextW(hWnd, L"Lab2 - Point input mode");
+
    ShowWindow(hWnd, nCmdShow);
    UpdateWindow(hWnd);
 
@@ -132,23 +139,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             switch (wmId)
             {
             case IDM_POINT:
-                // Point input mode is selected.
-                SetWindowTextW(hWnd, L"Lab2 - Point input mode");
+                shapeObjectsEditor.StartPointEditor(hWnd);
                 break;
 
             case IDM_LINE:
-                // Line input mode is selected.
-                SetWindowTextW(hWnd, L"Lab2 - Line input mode");
+                shapeObjectsEditor.StartLineEditor(hWnd);
                 break;
 
             case IDM_RECTANGLE:
-                // Rectangle input mode is selected.
-                SetWindowTextW(hWnd, L"Lab2 - Rectangle input mode");
+                shapeObjectsEditor.StartRectEditor(hWnd);
                 break;
 
             case IDM_ELLIPSE:
-                // Ellipse input mode is selected.
-                SetWindowTextW(hWnd, L"Lab2 - Ellipse input mode");
+                shapeObjectsEditor.StartEllipseEditor(hWnd);
                 break;
             case IDM_ABOUT:
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
@@ -161,14 +164,26 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
         }
         break;
+    case WM_LBUTTONDOWN:
+        // Starts the creation of a geometric object.
+        shapeObjectsEditor.OnLBdown(hWnd);
+        return 0;
+
+    case WM_LBUTTONUP:
+        // Completes the current geometric object.
+        shapeObjectsEditor.OnLBup(hWnd);
+        return 0;
+
+    case WM_MOUSEMOVE:
+        // Updates the temporary rubber-band preview.
+        shapeObjectsEditor.OnMouseMove(hWnd);
+        return 0;
+
     case WM_PAINT:
-        {
-            PAINTSTRUCT ps;
-            BeginPaint(hWnd, &ps);
-            // TODO: Add any drawing code here...
-            EndPaint(hWnd, &ps);
-        }
+        // Draws every object stored in the shape array.
+        shapeObjectsEditor.OnPaint(hWnd);
         break;
+
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
