@@ -4,6 +4,7 @@
 #include "framework.h"
 #include "Lab3.h"
 #include "shape_editor.h"
+#include "toolbar.h"
 
 #define MAX_LOADSTRING 100
 
@@ -14,6 +15,7 @@ WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 
 // Owns the shapes and forwards events to the selected editor.
 ShapeObjectsEditor shapeObjectsEditor;
+Toolbar toolbar;
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -129,6 +131,29 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
+    case WM_CREATE:
+    {
+        LPCREATESTRUCT createInfo =
+            reinterpret_cast<LPCREATESTRUCT>(lParam);
+
+        if (!toolbar.Create(hWnd, createInfo->hInstance))
+        {
+            MessageBoxW(
+                hWnd,
+                L"Failed to create the toolbar.",
+                L"Lab3",
+                MB_OK | MB_ICONERROR
+            );
+
+            return -1;
+        }
+
+        return 0;
+    }
+
+    case WM_SIZE:
+        toolbar.Resize();
+        return 0;
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
