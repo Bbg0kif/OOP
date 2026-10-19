@@ -36,32 +36,28 @@ void ShapeObjectsEditor::ChangeEditor(ShapeEditor* newEditor)
     currentEditor = newEditor;
 }
 
-// Selects point input mode.
 void ShapeObjectsEditor::StartPointEditor(HWND hWnd)
 {
+    UNREFERENCED_PARAMETER(hWnd);
     ChangeEditor(new PointEditor(shapes, &shapeCount));
-    SetWindowTextW(hWnd, L"Lab2 - Point input mode");
 }
 
-// Selects line input mode.
 void ShapeObjectsEditor::StartLineEditor(HWND hWnd)
 {
+    UNREFERENCED_PARAMETER(hWnd);
     ChangeEditor(new LineEditor(shapes, &shapeCount));
-    SetWindowTextW(hWnd, L"Lab2 - Line input mode");
 }
 
-// Selects rectangle input mode.
 void ShapeObjectsEditor::StartRectEditor(HWND hWnd)
 {
+    UNREFERENCED_PARAMETER(hWnd);
     ChangeEditor(new RectEditor(shapes, &shapeCount));
-    SetWindowTextW(hWnd, L"Lab2 - Rectangle input mode");
 }
 
-// Selects ellipse input mode.
 void ShapeObjectsEditor::StartEllipseEditor(HWND hWnd)
 {
+    UNREFERENCED_PARAMETER(hWnd);
     ChangeEditor(new EllipseEditor(shapes, &shapeCount));
-    SetWindowTextW(hWnd, L"Lab2 - Ellipse input mode");
 }
 
 // Passes the left-button press to the current editor.

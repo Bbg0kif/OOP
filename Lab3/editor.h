@@ -3,9 +3,9 @@
 #include <windows.h>
 #include "shape.h"
 
-// Number in the student list: 1.
-// Required array size: 1 + 100 = 101.
-constexpr int SHAPE_ARRAY_SIZE = 101;
+// Lab3: journal number 1 gives variant value 2.
+// Required capacity: 2 + 100 = 102.
+constexpr int SHAPE_ARRAY_SIZE = 102;
 
 // Abstract interface for all object editors.
 class Editor

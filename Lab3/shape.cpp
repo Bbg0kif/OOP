@@ -42,20 +42,19 @@ void LineShape::Show(HDC hdc)
     DeleteObject(newPen);
 }
 
-// Draws a rectangle with a black border
-// and a light-green fill according to variant 1.
 void RectShape::Show(HDC hdc)
 {
+    // Variant 2: black outline and cyan fill.
     HPEN newPen = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
     HPEN oldPen = static_cast<HPEN>(SelectObject(hdc, newPen));
 
-    HBRUSH newBrush = CreateSolidBrush(RGB(0, 255, 0));
+    HBRUSH newBrush = CreateSolidBrush(RGB(0, 255, 255));
     HBRUSH oldBrush =
         static_cast<HBRUSH>(SelectObject(hdc, newBrush));
 
     Rectangle(hdc, xs1, ys1, xs2, ys2);
 
-    // The old GDI objects must be restored before deletion.
+    // Restore previous objects before deleting our GDI resources.
     SelectObject(hdc, oldBrush);
     SelectObject(hdc, oldPen);
 
@@ -63,22 +62,21 @@ void RectShape::Show(HDC hdc)
     DeleteObject(newPen);
 }
 
-// Draws an ellipse with a black border
-// and a white fill according to variant 1.
 void EllipseShape::Show(HDC hdc)
 {
+    // Variant 2: black outline without filling the interior.
     HPEN newPen = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
     HPEN oldPen = static_cast<HPEN>(SelectObject(hdc, newPen));
 
-    HBRUSH newBrush = CreateSolidBrush(RGB(255, 255, 255));
-    HBRUSH oldBrush =
-        static_cast<HBRUSH>(SelectObject(hdc, newBrush));
+    // A stock hollow brush leaves existing drawings visible inside.
+    HBRUSH oldBrush = static_cast<HBRUSH>(
+        SelectObject(hdc, GetStockObject(NULL_BRUSH)));
 
     Ellipse(hdc, xs1, ys1, xs2, ys2);
 
     SelectObject(hdc, oldBrush);
     SelectObject(hdc, oldPen);
 
-    DeleteObject(newBrush);
+    // The stock brush belongs to Windows and must not be deleted.
     DeleteObject(newPen);
 }

@@ -51,9 +51,9 @@ void ShapeEditor::TogglePreview(HWND hWnd)
 
     int oldDrawingMode = SetROP2(hdc, R2_NOTXORPEN);
 
-    // Variant 1: solid red rubber-band line.
+    // Variant 2 requires a solid blue preview.
     HPEN previewPen =
-        CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
+        CreatePen(PS_SOLID, 1, RGB(0, 0, 255));
 
     HPEN oldPen =
         static_cast<HPEN>(SelectObject(hdc, previewPen));
@@ -217,18 +217,16 @@ RectEditor::RectEditor(Shape** shapeArray, int* count)
 {
 }
 
-// Variant 1: the initial point is the centre,
-// and the current point is one of the corners.
 void RectEditor::DrawPreview(HDC hdc)
 {
-    long oppositeX = 2 * xStart - xEnd;
-    long oppositeY = 2 * yStart - yEnd;
+    // The mouse positions define two opposite corners.
+    // Normalize coordinates to support dragging in any direction.
+    long left = std::min(xStart, xEnd);
+    long right = std::max(xStart, xEnd);
+    long top = std::min(yStart, yEnd);
+    long bottom = std::max(yStart, yEnd);
 
-    long left = std::min(oppositeX, xEnd);
-    long right = std::max(oppositeX, xEnd);
-    long top = std::min(oppositeY, yEnd);
-    long bottom = std::max(oppositeY, yEnd);
-
+    // The temporary preview contains only the outline.
     HBRUSH oldBrush = static_cast<HBRUSH>(
         SelectObject(hdc, GetStockObject(NULL_BRUSH)));
 
@@ -239,13 +237,11 @@ void RectEditor::DrawPreview(HDC hdc)
 
 Shape* RectEditor::CreateShape()
 {
-    long oppositeX = 2 * xStart - xEnd;
-    long oppositeY = 2 * yStart - yEnd;
-
-    long left = std::min(oppositeX, xEnd);
-    long right = std::max(oppositeX, xEnd);
-    long top = std::min(oppositeY, yEnd);
-    long bottom = std::max(oppositeY, yEnd);
+    // Store the normalized coordinates of opposite corners.
+    long left = std::min(xStart, xEnd);
+    long right = std::max(xStart, xEnd);
+    long top = std::min(yStart, yEnd);
+    long bottom = std::max(yStart, yEnd);
 
     RectShape* rectangle = new RectShape;
     rectangle->Set(left, top, right, bottom);
@@ -260,15 +256,19 @@ EllipseEditor::EllipseEditor(Shape** shapeArray, int* count)
 {
 }
 
-// Variant 1: two points define opposite corners
-// of the ellipse bounding rectangle.
 void EllipseEditor::DrawPreview(HDC hdc)
 {
-    long left = std::min(xStart, xEnd);
-    long right = std::max(xStart, xEnd);
-    long top = std::min(yStart, yEnd);
-    long bottom = std::max(yStart, yEnd);
+    // The initial mouse position is the ellipse center.
+    // Reflect the current corner across the center.
+    long oppositeX = 2 * xStart - xEnd;
+    long oppositeY = 2 * yStart - yEnd;
 
+    long left = std::min(oppositeX, xEnd);
+    long right = std::max(oppositeX, xEnd);
+    long top = std::min(oppositeY, yEnd);
+    long bottom = std::max(oppositeY, yEnd);
+
+    // Draw only the temporary outline.
     HBRUSH oldBrush = static_cast<HBRUSH>(
         SelectObject(hdc, GetStockObject(NULL_BRUSH)));
 
@@ -279,10 +279,14 @@ void EllipseEditor::DrawPreview(HDC hdc)
 
 Shape* EllipseEditor::CreateShape()
 {
-    long left = std::min(xStart, xEnd);
-    long right = std::max(xStart, xEnd);
-    long top = std::min(yStart, yEnd);
-    long bottom = std::max(yStart, yEnd);
+    // Calculate the opposite corner of the bounding rectangle.
+    long oppositeX = 2 * xStart - xEnd;
+    long oppositeY = 2 * yStart - yEnd;
+
+    long left = std::min(oppositeX, xEnd);
+    long right = std::max(oppositeX, xEnd);
+    long top = std::min(oppositeY, yEnd);
+    long bottom = std::max(oppositeY, yEnd);
 
     EllipseShape* ellipse = new EllipseShape;
     ellipse->Set(left, top, right, bottom);
