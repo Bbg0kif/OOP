@@ -3,6 +3,7 @@
 
 #include "framework.h"
 #include "Lab3.h"
+#include "shape_editor.h"
 
 #define MAX_LOADSTRING 100
 
@@ -10,6 +11,9 @@
 HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
+
+// Owns the shapes and forwards events to the selected editor.
+ShapeObjectsEditor shapeObjectsEditor;
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -131,6 +135,21 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             // Parse the menu selections:
             switch (wmId)
             {
+            case IDM_POINT:
+                shapeObjectsEditor.StartPointEditor(hWnd);
+                break;
+
+            case IDM_LINE:
+                shapeObjectsEditor.StartLineEditor(hWnd);
+                break;
+
+            case IDM_RECTANGLE:
+                shapeObjectsEditor.StartRectEditor(hWnd);
+                break;
+
+            case IDM_ELLIPSE:
+                shapeObjectsEditor.StartEllipseEditor(hWnd);
+                break;
             case IDM_ABOUT:
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
                 break;
@@ -142,14 +161,29 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
         }
         break;
+    case WM_LBUTTONDOWN:
+        // Start drawing at the mouse position.
+        shapeObjectsEditor.OnLBdown(hWnd);
+        return 0;
+
+    case WM_LBUTTONUP:
+        // Finish the shape and store it in the array.
+        shapeObjectsEditor.OnLBup(hWnd);
+        return 0;
+
+    case WM_MOUSEMOVE:
+        // Update the temporary outline while drawing.
+        shapeObjectsEditor.OnMouseMove(hWnd);
+        return 0;
+
+    case WM_INITMENUPOPUP:
+        // Update the selected item before the submenu appears.
+        shapeObjectsEditor.OnInitMenuPopup(hWnd, wParam);
+        return 0;
     case WM_PAINT:
-        {
-            PAINTSTRUCT ps;
-            BeginPaint(hWnd, &ps);
-            // TODO: Add any drawing code here...
-            EndPaint(hWnd, &ps);
-        }
-        break;
+        // Redraw all stored shapes.
+        shapeObjectsEditor.OnPaint(hWnd);
+        return 0;
     case WM_DESTROY:
         PostQuitMessage(0);
         break;

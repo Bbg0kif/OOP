@@ -17,6 +17,9 @@ private:
     // Editor used for processing the selected object type.
     ShapeEditor* currentEditor;
 
+    // Command identifier of the currently selected drawing mode.
+    UINT currentMode;
+
     // Replaces the current editor with another one.
     void ChangeEditor(ShapeEditor* newEditor);
 
@@ -35,4 +38,7 @@ public:
     void OnLBup(HWND hWnd);
     void OnMouseMove(HWND hWnd);
     void OnPaint(HWND hWnd);
+
+    // Marks the active drawing mode when the Objects menu opens.
+    void OnInitMenuPopup(HWND hWnd, WPARAM wParam);
 };

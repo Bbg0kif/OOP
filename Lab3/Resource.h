@@ -16,6 +16,13 @@
 #ifndef IDC_STATIC
 #define IDC_STATIC				-1
 #endif
+
+// Commands for selecting the drawing mode.
+#define IDM_POINT       40001
+#define IDM_LINE        40002
+#define IDM_RECTANGLE   40003
+#define IDM_ELLIPSE     40004
+
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED

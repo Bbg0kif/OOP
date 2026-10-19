@@ -1,10 +1,12 @@
 #include "framework.h"
 #include "shape_editor.h"
+#include "Resource.h"
 
 // Initializes an empty array and selects the point editor by default.
 ShapeObjectsEditor::ShapeObjectsEditor()
     : shapeCount(0),
-    currentEditor(nullptr)
+    currentEditor(nullptr),
+    currentMode(IDM_POINT)
 {
     // All elements must initially contain null pointers.
     for (int i = 0; i < SHAPE_ARRAY_SIZE; ++i)
@@ -39,25 +41,33 @@ void ShapeObjectsEditor::ChangeEditor(ShapeEditor* newEditor)
 void ShapeObjectsEditor::StartPointEditor(HWND hWnd)
 {
     UNREFERENCED_PARAMETER(hWnd);
+
     ChangeEditor(new PointEditor(shapes, &shapeCount));
+    currentMode = IDM_POINT;
 }
 
 void ShapeObjectsEditor::StartLineEditor(HWND hWnd)
 {
     UNREFERENCED_PARAMETER(hWnd);
+
     ChangeEditor(new LineEditor(shapes, &shapeCount));
+    currentMode = IDM_LINE;
 }
 
 void ShapeObjectsEditor::StartRectEditor(HWND hWnd)
 {
     UNREFERENCED_PARAMETER(hWnd);
+
     ChangeEditor(new RectEditor(shapes, &shapeCount));
+    currentMode = IDM_RECTANGLE;
 }
 
 void ShapeObjectsEditor::StartEllipseEditor(HWND hWnd)
 {
     UNREFERENCED_PARAMETER(hWnd);
+
     ChangeEditor(new EllipseEditor(shapes, &shapeCount));
+    currentMode = IDM_ELLIPSE;
 }
 
 // Passes the left-button press to the current editor.
@@ -86,4 +96,31 @@ void ShapeObjectsEditor::OnPaint(HWND hWnd)
 {
     if (currentEditor != nullptr)
         currentEditor->OnPaint(hWnd);
+}
+
+void ShapeObjectsEditor::OnInitMenuPopup(HWND hWnd, WPARAM wParam)
+{
+    HMENU mainMenu = GetMenu(hWnd);
+
+    if (mainMenu == nullptr)
+        return;
+
+    // Submenu indices start at zero:
+    // 0 = File, 1 = Objects, 2 = Help.
+    HMENU objectsMenu = GetSubMenu(mainMenu, 1);
+
+    if (objectsMenu == nullptr)
+        return;
+
+    // Update only the Objects submenu.
+    if (reinterpret_cast<HMENU>(wParam) != objectsMenu)
+        return;
+
+    // Mark the selected item and clear the other marks.
+    CheckMenuRadioItem(
+        objectsMenu,
+        IDM_POINT,
+        IDM_ELLIPSE,
+        currentMode,
+        MF_BYCOMMAND);
 }
