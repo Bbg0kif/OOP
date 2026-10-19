@@ -23,6 +23,8 @@
 #define IDM_RECTANGLE   40003
 #define IDM_ELLIPSE     40004
 
+#define IDB_TOOLBAR 201
+
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED

@@ -7,8 +7,18 @@
 #pragma comment(lib, "Comctl32.lib")
 
 Toolbar::Toolbar()
-    : hToolbar(nullptr)
+    : hToolbar(nullptr),
+    hImages(nullptr)
 {
+}
+
+Toolbar::~Toolbar()
+{
+    // The global Toolbar object outlives the application windows.
+    if (hImages != nullptr)
+    {
+        ImageList_Destroy(hImages);
+    }
 }
 
 bool Toolbar::Create(HWND hParent, HINSTANCE hInstance)
@@ -49,6 +59,83 @@ bool Toolbar::Create(HWND hParent, HINSTANCE hInstance)
         0
     );
 
+    // Set the dimensions of each image in the bitmap strip.
+    if (!SendMessageW(
+        hToolbar,
+        TB_SETBITMAPSIZE,
+        0,
+        MAKELPARAM(24, 24)
+    ))
+    {
+        DestroyWindow(hToolbar);
+        hToolbar = nullptr;
+        return false;
+    }
+
+    // Load the toolbar bitmap in the display-compatible format.
+        HBITMAP hBitmap = reinterpret_cast<HBITMAP>(
+            LoadImageW(
+                hInstance,
+                MAKEINTRESOURCEW(IDB_TOOLBAR),
+                IMAGE_BITMAP,
+                0,
+                0,
+                LR_DEFAULTCOLOR
+            )
+        );
+
+    if (hBitmap == nullptr)
+    {
+        DestroyWindow(hToolbar);
+        hToolbar = nullptr;
+        return false;
+    }
+
+    // Create a list containing four 24 x 24 images.
+    hImages = ImageList_Create(
+        24,
+        24,
+        ILC_COLOR24 | ILC_MASK,
+        4,
+        0
+    );
+
+    if (hImages == nullptr)
+    {
+        DeleteObject(hBitmap);
+        DestroyWindow(hToolbar);
+        hToolbar = nullptr;
+        return false;
+    }
+
+    // Treat only the gray background as transparent.
+    int firstImage = ImageList_AddMasked(
+        hImages,
+        hBitmap,
+        RGB(192, 192, 192)
+    );
+
+    // The image list stores its own copy of the bitmap.
+    DeleteObject(hBitmap);
+
+    if (firstImage == -1)
+    {
+        ImageList_Destroy(hImages);
+        hImages = nullptr;
+
+        DestroyWindow(hToolbar);
+        hToolbar = nullptr;
+        return false;
+    }
+
+    // Assign the image list to the toolbar.
+    SendMessageW(
+        hToolbar,
+        TB_SETIMAGELIST,
+        0,
+        reinterpret_cast<LPARAM>(hImages)
+    );
+
     // Store the button labels in the toolbar's string pool.
     const wchar_t labels[] =
         L"Point\0Line\0Rectangle\0Ellipse\0";
@@ -78,7 +165,7 @@ bool Toolbar::Create(HWND hParent, HINSTANCE hInstance)
 
     for (int i = 0; i < 4; ++i)
     {
-        buttons[i].iBitmap = I_IMAGENONE;
+        buttons[i].iBitmap = static_cast<int>(firstImage) + i;
         buttons[i].idCommand = commands[i];
         buttons[i].fsState = TBSTATE_ENABLED;
         buttons[i].fsStyle =

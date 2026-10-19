@@ -160,6 +160,7 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="Lab3.ico" />
+    <Image Include="res\toolbar.bmp" />
     <Image Include="small.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
