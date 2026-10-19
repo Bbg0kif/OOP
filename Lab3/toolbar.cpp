@@ -29,7 +29,7 @@ bool Toolbar::Create(HWND hParent, HINSTANCE hInstance)
         TOOLBARCLASSNAMEW,
         nullptr,
         WS_CHILD | WS_VISIBLE |
-        TBSTYLE_FLAT | CCS_TOP,
+        TBSTYLE_FLAT | TBSTYLE_TOOLTIPS | CCS_TOP,
         0, 0, 0, 0,
         hParent,
         nullptr,
@@ -81,7 +81,8 @@ bool Toolbar::Create(HWND hParent, HINSTANCE hInstance)
         buttons[i].iBitmap = I_IMAGENONE;
         buttons[i].idCommand = commands[i];
         buttons[i].fsState = TBSTATE_ENABLED;
-        buttons[i].fsStyle = BTNS_BUTTON | BTNS_AUTOSIZE;
+        buttons[i].fsStyle =
+            BTNS_CHECKGROUP | BTNS_AUTOSIZE | BTNS_SHOWTEXT;
         buttons[i].iString = firstString + i;
     }
 
@@ -98,6 +99,9 @@ bool Toolbar::Create(HWND hParent, HINSTANCE hInstance)
         return false;
     }
 
+    // Select the point tool when the toolbar is created.
+    SetActiveTool(IDM_POINT);
+
     Resize();
     return true;
 }
@@ -108,4 +112,102 @@ void Toolbar::Resize()
     {
         SendMessageW(hToolbar, TB_AUTOSIZE, 0, 0);
     }
+}
+
+void Toolbar::SetActiveTool(UINT commandId)
+{
+    if (hToolbar == nullptr)
+    {
+        return;
+    }
+
+    const UINT commands[] = {
+        IDM_POINT,
+        IDM_LINE,
+        IDM_RECTANGLE,
+        IDM_ELLIPSE
+    };
+
+    // Synchronize all buttons with the selected tool.
+    for (UINT id : commands)
+    {
+        SendMessageW(
+            hToolbar,
+            TB_CHECKBUTTON,
+            id,
+            MAKELPARAM(id == commandId, 0)
+        );
+    }
+}
+
+LRESULT Toolbar::OnNotify(LPARAM lParam)
+{
+    if (hToolbar == nullptr || lParam == 0)
+    {
+        return 0;
+    }
+
+    const NMHDR* header =
+        reinterpret_cast<const NMHDR*>(lParam);
+
+    HWND hTooltip = reinterpret_cast<HWND>(
+        SendMessageW(hToolbar, TB_GETTOOLTIPS, 0, 0)
+        );
+
+    // Process notifications from this toolbar's tooltip only.
+    if (header->hwndFrom != hTooltip)
+    {
+        return 0;
+    }
+
+    const wchar_t* wideText = L"";
+    const char* narrowText = "";
+
+    switch (header->idFrom)
+    {
+    case IDM_POINT:
+        wideText = L"Draw a point";
+        narrowText = "Draw a point";
+        break;
+
+    case IDM_LINE:
+        wideText = L"Draw a line";
+        narrowText = "Draw a line";
+        break;
+
+    case IDM_RECTANGLE:
+        wideText = L"Draw a rectangle";
+        narrowText = "Draw a rectangle";
+        break;
+
+    case IDM_ELLIPSE:
+        wideText = L"Draw an ellipse";
+        narrowText = "Draw an ellipse";
+        break;
+
+    default:
+        return 0;
+    }
+
+    // Support both Unicode and ANSI tooltip notifications.
+    if (header->code == TTN_GETDISPINFOW)
+    {
+        NMTTDISPINFOW* info =
+            reinterpret_cast<NMTTDISPINFOW*>(lParam);
+
+        lstrcpynW(info->szText, wideText, 80);
+        info->lpszText = info->szText;
+        info->hinst = nullptr;
+    }
+    else if (header->code == TTN_GETDISPINFOA)
+    {
+        NMTTDISPINFOA* info =
+            reinterpret_cast<NMTTDISPINFOA*>(lParam);
+
+        lstrcpynA(info->szText, narrowText, 80);
+        info->lpszText = info->szText;
+        info->hinst = nullptr;
+    }
+
+    return 0;
 }

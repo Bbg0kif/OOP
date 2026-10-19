@@ -154,6 +154,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_SIZE:
         toolbar.Resize();
         return 0;
+    case WM_NOTIFY:
+        return toolbar.OnNotify(lParam);
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
@@ -162,18 +164,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             {
             case IDM_POINT:
                 shapeObjectsEditor.StartPointEditor(hWnd);
+                toolbar.SetActiveTool(IDM_POINT);
                 break;
 
             case IDM_LINE:
                 shapeObjectsEditor.StartLineEditor(hWnd);
+                toolbar.SetActiveTool(IDM_LINE);
                 break;
 
             case IDM_RECTANGLE:
                 shapeObjectsEditor.StartRectEditor(hWnd);
+                toolbar.SetActiveTool(IDM_RECTANGLE);
                 break;
 
             case IDM_ELLIPSE:
                 shapeObjectsEditor.StartEllipseEditor(hWnd);
+                toolbar.SetActiveTool(IDM_ELLIPSE);
                 break;
             case IDM_ABOUT:
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);

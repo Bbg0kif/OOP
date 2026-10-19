@@ -12,4 +12,7 @@ public:
 
     bool Create(HWND hParent, HINSTANCE hInstance);
     void Resize();
+
+    void SetActiveTool(UINT commandId);
+    LRESULT OnNotify(LPARAM lParam);
 };
