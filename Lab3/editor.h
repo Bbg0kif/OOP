@@ -77,7 +77,7 @@ public:
     LineEditor(Shape** shapeArray, int* count);
 };
 
-// Editor for rectangles entered from the centre to a corner.
+// Editor for rectangles entered by two opposite corners..
 class RectEditor : public ShapeEditor
 {
 protected:
@@ -88,7 +88,7 @@ public:
     RectEditor(Shape** shapeArray, int* count);
 };
 
-// Editor for ellipses entered by two opposite corners.
+// Editor for ellipses entered from the center to a bounding-box corner.
 class EllipseEditor : public ShapeEditor
 {
 protected:
