@@ -13,11 +13,14 @@
 #include "ellipse_shape.h"
 #include "line_oo_shape.h"
 #include "cube_shape.h"
+#include "toolbar.h"
 
 #define MAX_LOADSTRING 100
 
 // Journal number 1: an editor with static storage duration.
 MyEditor editor;
+
+Toolbar toolbar;
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
@@ -110,7 +113,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
    hInst = hInstance; // Store instance handle in our global variable
 
-   HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
+   HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
       CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
 
    if (!hWnd)
@@ -139,15 +142,47 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     switch (message)
     {
     case WM_CREATE:
+        if (!toolbar.Create(hWnd, hInst))
+        {
+            MessageBoxW(
+                hWnd,
+                L"Failed to create the toolbar.",
+                L"Lab4",
+                MB_OK | MB_ICONERROR
+            );
+
+            return -1;
+        }
+
         editor.Start(new PointShape());
+
+        CheckMenuRadioItem(
+            GetMenu(hWnd),
+            IDM_POINT,
+            IDM_CUBE,
+            IDM_POINT,
+            MF_BYCOMMAND
+        );
+
         return 0;
 
+    case WM_SIZE:
+        toolbar.Resize();
+        InvalidateRect(hWnd, nullptr, FALSE);
+        return 0;
+
+    case WM_NOTIFY:
+        return toolbar.OnNotify(lParam);
+
     case WM_LBUTTONDOWN:
-        editor.OnLBdown(
-            hWnd,
-            GET_X_LPARAM(lParam),
-            GET_Y_LPARAM(lParam)
-        );
+        if (GET_Y_LPARAM(lParam) >= toolbar.GetHeight())
+        {
+            editor.OnLBdown(
+                hWnd,
+                GET_X_LPARAM(lParam),
+                GET_Y_LPARAM(lParam)
+            );
+        }
         return 0;
 
     case WM_MOUSEMOVE:
@@ -185,6 +220,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
+            if (wmId >= IDM_POINT && wmId <= IDM_CUBE)
+            {
+                toolbar.SetActiveTool(wmId);
+
+                CheckMenuRadioItem(
+                    GetMenu(hWnd),
+                    IDM_POINT,
+                    IDM_CUBE,
+                    wmId,
+                    MF_BYCOMMAND
+                );
+
+                SetFocus(hWnd);
+            }
             // Parse the menu selections:
             switch (wmId)
             {

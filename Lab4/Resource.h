@@ -12,6 +12,7 @@
 #define IDI_LAB4			107
 #define IDI_SMALL				108
 #define IDC_LAB4			109
+#define IDB_TOOLBAR     201
 #define IDC_MYICON				2
 #ifndef IDC_STATIC
 #define IDC_STATIC				-1
