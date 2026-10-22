@@ -4,7 +4,18 @@
 #include "framework.h"
 #include "Lab4.h"
 
+#include <windowsx.h>
+
+#include "my_editor.h"
+#include "point_shape.h"
+#include "line_shape.h"
+#include "rect_shape.h"
+#include "ellipse_shape.h"
+
 #define MAX_LOADSTRING 100
+
+// Journal number 1: an editor with static storage duration.
+MyEditor editor;
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
@@ -125,12 +136,74 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
+    case WM_CREATE:
+        editor.Start(new PointShape());
+        return 0;
+
+    case WM_LBUTTONDOWN:
+        editor.OnLBdown(
+            hWnd,
+            GET_X_LPARAM(lParam),
+            GET_Y_LPARAM(lParam)
+        );
+        return 0;
+
+    case WM_MOUSEMOVE:
+        editor.OnMouseMove(
+            hWnd,
+            GET_X_LPARAM(lParam),
+            GET_Y_LPARAM(lParam)
+        );
+        return 0;
+
+    case WM_LBUTTONUP:
+        editor.OnLBup(
+            hWnd,
+            GET_X_LPARAM(lParam),
+            GET_Y_LPARAM(lParam)
+        );
+        return 0;
+
+    case WM_CAPTURECHANGED:
+        editor.CancelDrawing(hWnd);
+        return 0;
+
+    case WM_CANCELMODE:
+        editor.CancelDrawing(hWnd);
+        return 0;
+
+    case WM_KEYDOWN:
+        if (wParam == VK_ESCAPE)
+        {
+            editor.CancelDrawing(hWnd);
+            return 0;
+        }
+        return DefWindowProc(hWnd, message, wParam, lParam);
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
             // Parse the menu selections:
             switch (wmId)
             {
+            case IDM_POINT:
+                editor.CancelDrawing(hWnd);
+                editor.Start(new PointShape());
+                break;
+
+            case IDM_LINE:
+                editor.CancelDrawing(hWnd);
+                editor.Start(new LineShape());
+                break;
+
+            case IDM_RECTANGLE:
+                editor.CancelDrawing(hWnd);
+                editor.Start(new RectShape());
+                break;
+
+            case IDM_ELLIPSE:
+                editor.CancelDrawing(hWnd);
+                editor.Start(new EllipseShape());
+                break;
             case IDM_ABOUT:
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
                 break;
@@ -143,13 +216,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         break;
     case WM_PAINT:
-        {
-            PAINTSTRUCT ps;
-            BeginPaint(hWnd, &ps);
-            // TODO: Add any drawing code here...
-            EndPaint(hWnd, &ps);
-        }
-        break;
+    {
+        PAINTSTRUCT ps{};
+        HDC hdc = BeginPaint(hWnd, &ps);
+
+        editor.OnPaint(hdc);
+
+        EndPaint(hWnd, &ps);
+        return 0;
+    }
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
