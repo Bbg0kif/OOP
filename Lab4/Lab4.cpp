@@ -11,6 +11,7 @@
 #include "line_shape.h"
 #include "rect_shape.h"
 #include "ellipse_shape.h"
+#include "line_oo_shape.h"
 
 #define MAX_LOADSTRING 100
 
@@ -179,6 +180,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             return 0;
         }
         return DefWindowProc(hWnd, message, wParam, lParam);
+
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
@@ -203,6 +205,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             case IDM_ELLIPSE:
                 editor.CancelDrawing(hWnd);
                 editor.Start(new EllipseShape());
+                break;
+            case IDM_LINEOO:
+                editor.CancelDrawing(hWnd);
+                editor.Start(new LineOOShape());
                 break;
             case IDM_ABOUT:
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);

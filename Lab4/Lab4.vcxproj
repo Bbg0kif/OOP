@@ -142,6 +142,7 @@
     <ClInclude Include="ellipse_shape.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Lab4.h" />
+    <ClInclude Include="line_oo_shape.h" />
     <ClInclude Include="line_shape.h" />
     <ClInclude Include="my_editor.h" />
     <ClInclude Include="point_shape.h" />
@@ -153,6 +154,7 @@
   <ItemGroup>
     <ClCompile Include="ellipse_shape.cpp" />
     <ClCompile Include="Lab4.cpp" />
+    <ClCompile Include="line_oo_shape.cpp" />
     <ClCompile Include="line_shape.cpp" />
     <ClCompile Include="my_editor.cpp" />
     <ClCompile Include="point_shape.cpp" />
