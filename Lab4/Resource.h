@@ -22,6 +22,7 @@
 #define IDM_RECTANGLE   41003
 #define IDM_ELLIPSE     41004
 #define IDM_LINEOO      41005
+#define IDM_CUBE        41006
 
 // Next default values for new objects
 //

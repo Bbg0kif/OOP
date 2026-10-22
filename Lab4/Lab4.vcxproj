@@ -139,6 +139,7 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="cube_shape.h" />
     <ClInclude Include="ellipse_shape.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Lab4.h" />
@@ -152,6 +153,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="cube_shape.cpp" />
     <ClCompile Include="ellipse_shape.cpp" />
     <ClCompile Include="Lab4.cpp" />
     <ClCompile Include="line_oo_shape.cpp" />
