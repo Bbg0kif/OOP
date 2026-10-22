@@ -85,7 +85,7 @@ void MyEditor::OnLBdown(HWND hWnd, long x, long y)
     temporaryShape->SetPreview(true);
 
     SetCapture(hWnd);
-    InvalidateRect(hWnd, nullptr, TRUE);
+    InvalidateRect(hWnd, nullptr, FALSE);
 }
 
 void MyEditor::OnMouseMove(HWND hWnd, long x, long y)
@@ -96,7 +96,7 @@ void MyEditor::OnMouseMove(HWND hWnd, long x, long y)
     }
 
     temporaryShape->Set(startX, startY, x, y);
-    InvalidateRect(hWnd, nullptr, TRUE);
+    InvalidateRect(hWnd, nullptr, FALSE);
 }
 
 void MyEditor::OnLBup(HWND hWnd, long x, long y)
@@ -119,7 +119,7 @@ void MyEditor::OnLBup(HWND hWnd, long x, long y)
         ReleaseCapture();
     }
 
-    InvalidateRect(hWnd, nullptr, TRUE);
+    InvalidateRect(hWnd, nullptr, FALSE);
 }
 
 void MyEditor::OnPaint(HDC hdc)
@@ -150,6 +150,6 @@ void MyEditor::CancelDrawing(HWND hWnd)
 
     if (hadPreview)
     {
-        InvalidateRect(hWnd, nullptr, TRUE);
+        InvalidateRect(hWnd, nullptr, FALSE);
     }
 }

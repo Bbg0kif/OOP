@@ -215,12 +215,75 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
         }
         break;
+    case WM_ERASEBKGND:
+        // The background is painted together with the shapes.
+        return 1;
     case WM_PAINT:
     {
         PAINTSTRUCT ps{};
         HDC hdc = BeginPaint(hWnd, &ps);
 
-        editor.OnPaint(hdc);
+        RECT clientRect{};
+        GetClientRect(hWnd, &clientRect);
+
+        const int width = clientRect.right - clientRect.left;
+        const int height = clientRect.bottom - clientRect.top;
+
+        if (width > 0 && height > 0)
+        {
+            // Create an off-screen drawing surface.
+            HDC bufferDC = CreateCompatibleDC(hdc);
+            HBITMAP bufferBitmap =
+                CreateCompatibleBitmap(hdc, width, height);
+
+            if (bufferDC != nullptr && bufferBitmap != nullptr)
+            {
+                HGDIOBJ oldBitmap =
+                    SelectObject(bufferDC, bufferBitmap);
+
+                // Prepare the entire frame in memory.
+                FillRect(
+                    bufferDC,
+                    &clientRect,
+                    static_cast<HBRUSH>(GetStockObject(WHITE_BRUSH))
+                );
+
+                editor.OnPaint(bufferDC);
+
+                // Copy the completed frame to the window.
+                BitBlt(
+                    hdc,
+                    0, 0,
+                    width, height,
+                    bufferDC,
+                    0, 0,
+                    SRCCOPY
+                );
+
+                SelectObject(bufferDC, oldBitmap);
+            }
+            else
+            {
+                // Fall back to direct drawing if allocation fails.
+                FillRect(
+                    hdc,
+                    &clientRect,
+                    static_cast<HBRUSH>(GetStockObject(WHITE_BRUSH))
+                );
+
+                editor.OnPaint(hdc);
+            }
+
+            if (bufferBitmap != nullptr)
+            {
+                DeleteObject(bufferBitmap);
+            }
+
+            if (bufferDC != nullptr)
+            {
+                DeleteDC(bufferDC);
+            }
+        }
 
         EndPaint(hWnd, &ps);
         return 0;
