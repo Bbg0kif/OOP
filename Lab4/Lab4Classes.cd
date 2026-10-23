@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="Shape">
+    <Position X="3" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAEAAAABAAABAAAAAAAAAABAAAEBGAAAAAAAAAAABA=</HashCode>
+      <FileName>shape.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="PointShape">
+    <Position X="0.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAABA=</HashCode>
+      <FileName>point_shape.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LineShape">
+    <Position X="4" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAABA=</HashCode>
+      <FileName>line_shape.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RectShape">
+    <Position X="5.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAAAAAAAAAAABAAAAAEAAAAAAAAAAAAABA=</HashCode>
+      <FileName>rect_shape.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="EllipseShape">
+    <Position X="2.25" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAABA=</HashCode>
+      <FileName>ellipse_shape.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="LineOOShape">
+    <Position X="3" Y="7.5" Width="1.5" />
+    <InheritanceLine Type="LineShape">
+      <InheritanceModifierLabel ManuallyPlaced="true">
+        <Position X="0.121" Y="0.074" />
+      </InheritanceModifierLabel>
+    </InheritanceLine>
+    <InheritanceLine Type="EllipseShape">
+      <InheritanceModifierLabel ManuallyPlaced="true">
+        <Position X="0.116" Y="0.078" />
+      </InheritanceModifierLabel>
+    </InheritanceLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAABA=</HashCode>
+      <FileName>line_oo_shape.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="CubeShape">
+    <Position X="5" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAACAAAAAAAAAAAAAAAEAAAAAAAAAAAAABA=</HashCode>
+      <FileName>cube_shape.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="MyEditor">
+    <Position X="8.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACEIAAAACJAAAAgAAIAQAAAABCAAAAAECAkAAAAAAA=</HashCode>
+      <FileName>my_editor.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Toolbar">
+    <Position X="10.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAEAAAAAAAAFCAAAAAEAAAAAggQFAAAA=</HashCode>
+      <FileName>toolbar.h</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
