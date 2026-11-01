@@ -63,6 +63,9 @@
     <ClInclude Include="my_table.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="drawing_file.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Lab5.cpp">
@@ -96,6 +99,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="my_table.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="drawing_file.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

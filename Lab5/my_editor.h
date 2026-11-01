@@ -1,6 +1,8 @@
 #pragma once
 
 #include "shape.h"
+#include <memory>
+#include <vector>
 
 class MyEditor
 {
@@ -41,4 +43,6 @@ public:
 
     void HighlightShape(int index);
     bool RemoveShape(int index);
+
+    void ReplaceShapes(HWND hWnd, std::vector<std::unique_ptr<Shape>>& loaded);
 };

@@ -14,6 +14,7 @@ public:
     bool ProcessDialogMessage(MSG& message) const;
 
     void Add(const std::string& name, long x1, long y1, long x2, long y2);
+    void Clear();
 
     void SetSelectionCallback(std::function<void(int)> callback);
     void SetDeleteCallback(std::function<bool(int)> callback);

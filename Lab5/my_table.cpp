@@ -226,3 +226,14 @@ void MyTable::SetDeleteCallback(std::function<bool(int)> callback)
 {
     onDeleteRequested = callback;
 }
+
+void MyTable::Clear()
+{
+    rows.clear();
+
+    if (dialog != nullptr)
+    {
+        HWND list = GetDlgItem(dialog, IDC_OBJECT_LIST);
+        ListView_DeleteAllItems(list);
+    }
+}

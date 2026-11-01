@@ -26,6 +26,7 @@
 #define IDM_LINEOO                      41005
 #define IDM_CUBE                        41006
 #define IDM_OBJECT_TABLE                41007
+#define IDM_OPEN_DRAWING                41008
 
 // Next default values for new objects
 //

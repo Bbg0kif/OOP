@@ -16,11 +16,54 @@
 #include "cube_shape.h"
 #include "toolbar.h"
 #include "my_table.h"
+#include "drawing_file.h"
+#include <commdlg.h>
+
+#pragma comment(lib, "Comdlg32.lib")
 
 #define MAX_LOADSTRING 100
 
 Toolbar toolbar;
 MyTable objectTable;
+
+static void OpenDrawing(HWND hWnd)
+{
+    wchar_t path[MAX_PATH]{};
+
+    OPENFILENAMEW dialog{};
+    dialog.lStructSize = sizeof(dialog);
+    dialog.hwndOwner = hWnd;
+    dialog.lpstrFilter =
+        L"Drawing files (*.txt)\0*.txt\0All files (*.*)\0*.*\0";
+    dialog.lpstrFile = path;
+    dialog.nMaxFile = MAX_PATH;
+    dialog.lpstrTitle = L"Open drawing";
+    dialog.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_NOCHANGEDIR;
+
+    if (!GetOpenFileNameW(&dialog))
+        return;
+
+    std::vector<std::unique_ptr<Shape>> loaded;
+    std::wstring error;
+
+    if (!ReadDrawingFile(path, loaded, error))
+    {
+        MessageBoxW(hWnd, error.c_str(), L"Open drawing", MB_OK | MB_ICONERROR);
+        return;
+    }
+
+    // Read all rows before transferring ownership to the editor.
+    objectTable.Clear();
+
+    for (const auto& shape : loaded)
+    {
+        long x1, y1, x2, y2;
+        shape->GetCoordinates(x1, y1, x2, y2);
+        objectTable.Add(shape->GetName(), x1, y1, x2, y2);
+    }
+
+    MyEditor::GetInstance().ReplaceShapes(hWnd, loaded);
+}
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
@@ -315,6 +358,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
         case IDM_ABOUT:
             DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+            break;
+        case IDM_OPEN_DRAWING:
+            OpenDrawing(hWnd);
             break;
         case IDM_EXIT:
             DestroyWindow(hWnd);

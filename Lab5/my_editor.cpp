@@ -189,3 +189,28 @@ bool MyEditor::RemoveShape(int index)
 
     return true;
 }
+
+void MyEditor::ReplaceShapes(
+    HWND hWnd, std::vector<std::unique_ptr<Shape>>& loaded)
+{
+    // Prepare the new array before releasing the current drawing.
+    const int newCount = static_cast<int>(loaded.size());
+    Shape** newArray = newCount > 0 ? new Shape * [newCount] : nullptr;
+
+    CancelDrawing(hWnd);
+
+    for (int i = 0; i < newCount; ++i)
+        newArray[i] = loaded[i].release();
+
+    for (int i = 0; i < shapeCount; ++i)
+        delete pshape[i];
+
+    delete[] pshape;
+
+    pshape = newArray;
+    shapeCount = newCount;
+    capacity = newCount;
+    highlightedIndex = -1;
+
+    InvalidateRect(hWnd, nullptr, FALSE);
+}
