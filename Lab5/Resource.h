@@ -16,6 +16,16 @@
 #ifndef IDC_STATIC
 #define IDC_STATIC				-1
 #endif
+
+#define IDB_TOOLBAR                     201
+
+#define IDM_POINT                       41001
+#define IDM_LINE                        41002
+#define IDM_RECTANGLE                   41003
+#define IDM_ELLIPSE                     41004
+#define IDM_LINEOO                      41005
+#define IDM_CUBE                        41006
+
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED

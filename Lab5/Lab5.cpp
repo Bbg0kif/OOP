@@ -4,7 +4,23 @@
 #include "framework.h"
 #include "Lab5.h"
 
+#include <windowsx.h>
+
+#include "my_editor.h"
+#include "point_shape.h"
+#include "line_shape.h"
+#include "rect_shape.h"
+#include "ellipse_shape.h"
+#include "line_oo_shape.h"
+#include "cube_shape.h"
+#include "toolbar.h"
+
 #define MAX_LOADSTRING 100
+
+// Journal number 1: an editor with static storage duration.
+MyEditor editor;
+
+Toolbar toolbar;
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
@@ -18,9 +34,9 @@ LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
-                     _In_opt_ HINSTANCE hPrevInstance,
-                     _In_ LPWSTR    lpCmdLine,
-                     _In_ int       nCmdShow)
+    _In_opt_ HINSTANCE hPrevInstance,
+    _In_ LPWSTR    lpCmdLine,
+    _In_ int       nCmdShow)
 {
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
@@ -33,7 +49,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     MyRegisterClass(hInstance);
 
     // Perform application initialization:
-    if (!InitInstance (hInstance, nCmdShow))
+    if (!InitInstance(hInstance, nCmdShow))
     {
         return FALSE;
     }
@@ -52,7 +68,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         }
     }
 
-    return (int) msg.wParam;
+    return (int)msg.wParam;
 }
 
 
@@ -68,17 +84,17 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 
     wcex.cbSize = sizeof(WNDCLASSEX);
 
-    wcex.style          = CS_HREDRAW | CS_VREDRAW;
-    wcex.lpfnWndProc    = WndProc;
-    wcex.cbClsExtra     = 0;
-    wcex.cbWndExtra     = 0;
-    wcex.hInstance      = hInstance;
-    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_LAB5));
-    wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_LAB5);
-    wcex.lpszClassName  = szWindowClass;
-    wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
+    wcex.style = CS_HREDRAW | CS_VREDRAW;
+    wcex.lpfnWndProc = WndProc;
+    wcex.cbClsExtra = 0;
+    wcex.cbWndExtra = 0;
+    wcex.hInstance = hInstance;
+    wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_LAB5));
+    wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wcex.lpszMenuName = MAKEINTRESOURCEW(IDC_LAB5);
+    wcex.lpszClassName = szWindowClass;
+    wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
     return RegisterClassExW(&wcex);
 }
@@ -95,20 +111,20 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 //
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-   hInst = hInstance; // Store instance handle in our global variable
+    hInst = hInstance; // Store instance handle in our global variable
 
-   HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
+    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
+        CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
 
-   if (!hWnd)
-   {
-      return FALSE;
-   }
+    if (!hWnd)
+    {
+        return FALSE;
+    }
 
-   ShowWindow(hWnd, nCmdShow);
-   UpdateWindow(hWnd);
+    ShowWindow(hWnd, nCmdShow);
+    UpdateWindow(hWnd);
 
-   return TRUE;
+    return TRUE;
 }
 
 //
@@ -125,31 +141,213 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
-    case WM_COMMAND:
+    case WM_CREATE:
+        if (!toolbar.Create(hWnd, hInst))
         {
-            int wmId = LOWORD(wParam);
-            // Parse the menu selections:
-            switch (wmId)
+            MessageBoxW(
+                hWnd,
+                L"Failed to create the toolbar.",
+                L"Lab5",
+                MB_OK | MB_ICONERROR
+            );
+
+            return -1;
+        }
+
+        editor.Start(new PointShape());
+
+        CheckMenuRadioItem(
+            GetMenu(hWnd),
+            IDM_POINT,
+            IDM_CUBE,
+            IDM_POINT,
+            MF_BYCOMMAND
+        );
+
+        return 0;
+
+    case WM_SIZE:
+        toolbar.Resize();
+        InvalidateRect(hWnd, nullptr, FALSE);
+        return 0;
+
+    case WM_NOTIFY:
+        return toolbar.OnNotify(lParam);
+
+    case WM_LBUTTONDOWN:
+        if (GET_Y_LPARAM(lParam) >= toolbar.GetHeight())
+        {
+            editor.OnLBdown(
+                hWnd,
+                GET_X_LPARAM(lParam),
+                GET_Y_LPARAM(lParam)
+            );
+        }
+        return 0;
+
+    case WM_MOUSEMOVE:
+        editor.OnMouseMove(
+            hWnd,
+            GET_X_LPARAM(lParam),
+            GET_Y_LPARAM(lParam)
+        );
+        return 0;
+
+    case WM_LBUTTONUP:
+        editor.OnLBup(
+            hWnd,
+            GET_X_LPARAM(lParam),
+            GET_Y_LPARAM(lParam)
+        );
+        return 0;
+
+    case WM_CAPTURECHANGED:
+        editor.CancelDrawing(hWnd);
+        return 0;
+
+    case WM_CANCELMODE:
+        editor.CancelDrawing(hWnd);
+        return 0;
+
+    case WM_KEYDOWN:
+        if (wParam == VK_ESCAPE)
+        {
+            editor.CancelDrawing(hWnd);
+            return 0;
+        }
+        return DefWindowProc(hWnd, message, wParam, lParam);
+
+    case WM_COMMAND:
+    {
+        int wmId = LOWORD(wParam);
+        if (wmId >= IDM_POINT && wmId <= IDM_CUBE)
+        {
+            toolbar.SetActiveTool(wmId);
+
+            CheckMenuRadioItem(
+                GetMenu(hWnd),
+                IDM_POINT,
+                IDM_CUBE,
+                wmId,
+                MF_BYCOMMAND
+            );
+
+            SetFocus(hWnd);
+        }
+        // Parse the menu selections:
+        switch (wmId)
+        {
+        case IDM_POINT:
+            editor.CancelDrawing(hWnd);
+            editor.Start(new PointShape());
+            break;
+
+        case IDM_LINE:
+            editor.CancelDrawing(hWnd);
+            editor.Start(new LineShape());
+            break;
+
+        case IDM_RECTANGLE:
+            editor.CancelDrawing(hWnd);
+            editor.Start(new RectShape());
+            break;
+
+        case IDM_ELLIPSE:
+            editor.CancelDrawing(hWnd);
+            editor.Start(new EllipseShape());
+            break;
+        case IDM_LINEOO:
+            editor.CancelDrawing(hWnd);
+            editor.Start(new LineOOShape());
+            break;
+        case IDM_CUBE:
+            editor.CancelDrawing(hWnd);
+            editor.Start(new CubeShape());
+            break;
+        case IDM_ABOUT:
+            DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+            break;
+        case IDM_EXIT:
+            DestroyWindow(hWnd);
+            break;
+        default:
+            return DefWindowProc(hWnd, message, wParam, lParam);
+        }
+    }
+    break;
+    case WM_ERASEBKGND:
+        // The background is painted together with the shapes.
+        return 1;
+    case WM_PAINT:
+    {
+        PAINTSTRUCT ps{};
+        HDC hdc = BeginPaint(hWnd, &ps);
+
+        RECT clientRect{};
+        GetClientRect(hWnd, &clientRect);
+
+        const int width = clientRect.right - clientRect.left;
+        const int height = clientRect.bottom - clientRect.top;
+
+        if (width > 0 && height > 0)
+        {
+            // Create an off-screen drawing surface.
+            HDC bufferDC = CreateCompatibleDC(hdc);
+            HBITMAP bufferBitmap =
+                CreateCompatibleBitmap(hdc, width, height);
+
+            if (bufferDC != nullptr && bufferBitmap != nullptr)
             {
-            case IDM_ABOUT:
-                DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-                break;
-            case IDM_EXIT:
-                DestroyWindow(hWnd);
-                break;
-            default:
-                return DefWindowProc(hWnd, message, wParam, lParam);
+                HGDIOBJ oldBitmap =
+                    SelectObject(bufferDC, bufferBitmap);
+
+                // Prepare the entire frame in memory.
+                FillRect(
+                    bufferDC,
+                    &clientRect,
+                    static_cast<HBRUSH>(GetStockObject(WHITE_BRUSH))
+                );
+
+                editor.OnPaint(bufferDC);
+
+                // Copy the completed frame to the window.
+                BitBlt(
+                    hdc,
+                    0, 0,
+                    width, height,
+                    bufferDC,
+                    0, 0,
+                    SRCCOPY
+                );
+
+                SelectObject(bufferDC, oldBitmap);
+            }
+            else
+            {
+                // Fall back to direct drawing if allocation fails.
+                FillRect(
+                    hdc,
+                    &clientRect,
+                    static_cast<HBRUSH>(GetStockObject(WHITE_BRUSH))
+                );
+
+                editor.OnPaint(hdc);
+            }
+
+            if (bufferBitmap != nullptr)
+            {
+                DeleteObject(bufferBitmap);
+            }
+
+            if (bufferDC != nullptr)
+            {
+                DeleteDC(bufferDC);
             }
         }
-        break;
-    case WM_PAINT:
-        {
-            PAINTSTRUCT ps;
-            BeginPaint(hWnd, &ps);
-            // TODO: Add any drawing code here...
-            EndPaint(hWnd, &ps);
-        }
-        break;
+
+        EndPaint(hWnd, &ps);
+        return 0;
+    }
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
