@@ -24,3 +24,11 @@ void Shape::SetPreview(bool enabled)
 {
     preview = enabled;
 }
+
+void Shape::GetCoordinates(long& x1, long& y1, long& x2, long& y2) const
+{
+    x1 = xs1;
+    y1 = ys1;
+    x2 = xs2;
+    y2 = ys2;
+}

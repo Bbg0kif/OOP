@@ -30,7 +30,7 @@ public:
     void Start(Shape* shape);
 
     void OnLBdown(HWND hWnd, long x, long y);
-    void OnLBup(HWND hWnd, long x, long y);
+    const Shape* OnLBup(HWND hWnd, long x, long y);
     void OnMouseMove(HWND hWnd, long x, long y);
     void OnPaint(HDC hdc);
 

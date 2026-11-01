@@ -34,3 +34,13 @@ void PointShape::Show(HDC hdc)
     SelectObject(hdc, oldPen);
     DeleteObject(pen);
 }
+
+const char* PointShape::GetName() const
+{
+    return "PointShape";
+}
+
+void PointShape::Set(long x1, long y1, long, long)
+{
+    Shape::Set(x1, y1, x1, y1);
+}

@@ -50,3 +50,8 @@ void EllipseShape::Show(HDC hdc)
 
     DeleteObject(pen);
 }
+
+const char* EllipseShape::GetName() const
+{
+    return "EllipseShape";
+}

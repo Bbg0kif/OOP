@@ -77,3 +77,8 @@ void CubeShape::Show(HDC hdc)
     // Restore the coordinates for future repainting.
     Set(x1, y1, x2, y2);
 }
+
+const char* CubeShape::GetName() const
+{
+    return "CubeShape";
+}

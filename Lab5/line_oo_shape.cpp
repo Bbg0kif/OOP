@@ -49,3 +49,8 @@ void LineOOShape::Show(HDC hdc)
     // Restore the original coordinates.
     Set(x1, y1, x2, y2);
 }
+
+const char* LineOOShape::GetName() const
+{
+    return "LineOOShape";
+}

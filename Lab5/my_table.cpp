@@ -76,6 +76,9 @@ INT_PTR CALLBACK MyTable::DialogProc(
                 reinterpret_cast<LPARAM>(&column));
         }
 
+        for (const auto& row : self->rows)
+            self->ShowRow(row);
+
         return TRUE;
     }
 
@@ -105,4 +108,49 @@ INT_PTR CALLBACK MyTable::DialogProc(
     }
 
     return FALSE;
+}
+
+void MyTable::Add(const std::string& name,
+    long x1, long y1, long x2, long y2)
+{
+    // Class names in the file format use ASCII characters.
+    rows.push_back({
+        std::wstring(name.begin(), name.end()),
+        std::to_wstring(x1),
+        std::to_wstring(y1),
+        std::to_wstring(x2),
+        std::to_wstring(y2)
+        });
+
+    if (dialog != nullptr)
+        ShowRow(rows.back());
+}
+
+void MyTable::ShowRow(const Row& row)
+{
+    HWND list = GetDlgItem(dialog, IDC_OBJECT_LIST);
+
+    // The Windows API expects writable text buffers.
+    Row text = row;
+
+    LVITEMW item{};
+    item.mask = LVIF_TEXT;
+    item.iItem = ListView_GetItemCount(list);
+    item.pszText = &text[0][0];
+
+    const int index = static_cast<int>(SendMessageW(
+        list, LVM_INSERTITEMW, 0, reinterpret_cast<LPARAM>(&item)));
+
+    if (index < 0)
+        return;
+
+    for (int column = 1; column < 5; ++column)
+    {
+        LVITEMW cell{};
+        cell.iSubItem = column;
+        cell.pszText = &text[column][0];
+
+        SendMessageW(list, LVM_SETITEMTEXTW, index,
+            reinterpret_cast<LPARAM>(&cell));
+    }
 }

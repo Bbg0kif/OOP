@@ -73,3 +73,8 @@ void RectShape::Show(HDC hdc)
 
     DeleteObject(pen);
 }
+
+const char* RectShape::GetName() const
+{
+    return "RectShape";
+}

@@ -105,27 +105,23 @@ void MyEditor::OnMouseMove(HWND hWnd, long x, long y)
     InvalidateRect(hWnd, nullptr, FALSE);
 }
 
-void MyEditor::OnLBup(HWND hWnd, long x, long y)
+const Shape* MyEditor::OnLBup(HWND hWnd, long x, long y)
 {
     if (temporaryShape == nullptr)
-    {
-        return;
-    }
+        return nullptr;
 
     temporaryShape->Set(startX, startY, x, y);
     temporaryShape->SetPreview(false);
 
-    AddShape(temporaryShape);
-
-    // Ownership has moved to the array.
+    Shape* completed = temporaryShape;
+    AddShape(completed);
     temporaryShape = nullptr;
 
     if (GetCapture() == hWnd)
-    {
         ReleaseCapture();
-    }
 
     InvalidateRect(hWnd, nullptr, FALSE);
+    return completed;
 }
 
 void MyEditor::OnPaint(HDC hdc)

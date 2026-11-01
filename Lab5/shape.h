@@ -18,13 +18,16 @@ public:
     virtual ~Shape();
 
     // Stores the coordinates used by the shape.
-    void Set(long x1, long y1, long x2, long y2);
+    virtual void Set(long x1, long y1, long x2, long y2);
 
     // Selects temporary or final drawing.
     void SetPreview(bool enabled);
 
     // Creates a copy of the actual derived object.
     virtual Shape* Clone() const = 0;
+
+    virtual const char* GetName() const = 0;
+    void GetCoordinates(long& x1, long& y1, long& x2, long& y2) const;
 
     // Draws either a preview or a completed shape.
     virtual void Show(HDC hdc) = 0;

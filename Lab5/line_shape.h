@@ -7,5 +7,8 @@ class LineShape : public virtual Shape
 {
 public:
     Shape* Clone() const override;
+
+    const char* GetName() const override;
+
     void Show(HDC hdc) override;
 };

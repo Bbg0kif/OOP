@@ -5,6 +5,7 @@
 #include "Lab5.h"
 
 #include <windowsx.h>
+#include <fstream>
 
 #include "my_editor.h"
 #include "point_shape.h"
@@ -197,12 +198,35 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         return 0;
 
     case WM_LBUTTONUP:
-        editor.OnLBup(
+    {
+        const Shape* completed = editor.OnLBup(
             hWnd,
             GET_X_LPARAM(lParam),
             GET_Y_LPARAM(lParam)
         );
+
+        if (completed == nullptr)
+            return 0;
+
+        long x1, y1, x2, y2;
+        completed->GetCoordinates(x1, y1, x2, y2);
+        const char* name = completed->GetName();
+
+        objectTable.Add(name, x1, y1, x2, y2);
+
+        std::ofstream file("shapes.txt", std::ios::app);
+        file << name << '\t' << x1 << '\t' << y1
+            << '\t' << x2 << '\t' << y2 << '\n';
+        file.close();
+
+        if (!file)
+        {
+            MessageBoxW(hWnd, L"Could not save the shape to shapes.txt.",
+                L"Lab5", MB_OK | MB_ICONERROR);
+        }
+
         return 0;
+    }
 
     case WM_CAPTURECHANGED:
         editor.CancelDrawing(hWnd);

@@ -12,5 +12,8 @@ public:
     explicit RectShape(bool useFill = true);
 
     Shape* Clone() const override;
+
+    const char* GetName() const override;
+
     void Show(HDC hdc) override;
 };

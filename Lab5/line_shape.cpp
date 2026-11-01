@@ -31,3 +31,8 @@ void LineShape::Show(HDC hdc)
     SelectObject(hdc, oldPen);
     DeleteObject(pen);
 }
+
+const char* LineShape::GetName() const
+{
+    return "LineShape";
+}
