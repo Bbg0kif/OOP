@@ -158,6 +158,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             return -1;
         }
 
+        objectTable.SetSelectionCallback([hWnd](int index)
+            {
+                MyEditor::GetInstance().HighlightShape(index);
+                InvalidateRect(hWnd, nullptr, FALSE);
+            });
+
         editor.Start(new PointShape());
 
         CheckMenuRadioItem(

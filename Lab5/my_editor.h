@@ -19,6 +19,9 @@ private:
 
     MyEditor();
     ~MyEditor();
+
+    int highlightedIndex = -1;
+
 public:
     static MyEditor& GetInstance();
 
@@ -35,4 +38,7 @@ public:
     void OnPaint(HDC hdc);
 
     void CancelDrawing(HWND hWnd);
+
+    void HighlightShape(int index);
+
 };

@@ -126,12 +126,21 @@ const Shape* MyEditor::OnLBup(HWND hWnd, long x, long y)
 
 void MyEditor::OnPaint(HDC hdc)
 {
+    // Draw all completed shapes in their original style.
     for (int i = 0; i < shapeCount; ++i)
     {
         pshape[i]->Show(hdc);
     }
 
-    // Preview uses the same polymorphic drawing method.
+    // Draw a dotted outline over the selected shape.
+    if (highlightedIndex >= 0 && highlightedIndex < shapeCount)
+    {
+        Shape* highlighted = pshape[highlightedIndex];
+        highlighted->SetPreview(true);
+        highlighted->Show(hdc);
+        highlighted->SetPreview(false);
+    }
+
     if (temporaryShape != nullptr)
     {
         temporaryShape->Show(hdc);
@@ -154,4 +163,10 @@ void MyEditor::CancelDrawing(HWND hWnd)
     {
         InvalidateRect(hWnd, nullptr, FALSE);
     }
+}
+
+void MyEditor::HighlightShape(int index)
+{
+    highlightedIndex =
+        (index >= 0 && index < shapeCount) ? index : -1;
 }

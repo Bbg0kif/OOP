@@ -82,6 +82,36 @@ INT_PTR CALLBACK MyTable::DialogProc(
         return TRUE;
     }
 
+    case WM_NOTIFY:
+    {
+        const NMHDR* header = reinterpret_cast<const NMHDR*>(lParam);
+
+        if (header->idFrom != IDC_OBJECT_LIST ||
+            header->code != LVN_ITEMCHANGED)
+            break;
+
+        const NMLISTVIEW* change =
+            reinterpret_cast<const NMLISTVIEW*>(lParam);
+
+        // React only when the selected state changes.
+        if ((change->uChanged & LVIF_STATE) == 0 ||
+            ((change->uOldState ^ change->uNewState) & LVIS_SELECTED) == 0)
+            break;
+
+        MyTable* self = reinterpret_cast<MyTable*>(
+            GetWindowLongPtrW(hDlg, DWLP_USER));
+
+        if (self != nullptr && self->onSelectionChanged)
+        {
+            int index = ListView_GetNextItem(
+                header->hwndFrom, -1, LVNI_SELECTED);
+
+            self->onSelectionChanged(index);
+        }
+
+        return TRUE;
+    }
+
     case WM_COMMAND:
         if (LOWORD(wParam) == IDCANCEL)
         {
@@ -100,7 +130,12 @@ INT_PTR CALLBACK MyTable::DialogProc(
             GetWindowLongPtrW(hDlg, DWLP_USER));
 
         if (self != nullptr)
+        {
             self->dialog = nullptr;
+
+            if (self->onSelectionChanged)
+                self->onSelectionChanged(-1);
+        }
 
         SetWindowLongPtrW(hDlg, DWLP_USER, 0);
         break;
@@ -153,4 +188,9 @@ void MyTable::ShowRow(const Row& row)
         SendMessageW(list, LVM_SETITEMTEXTW, index,
             reinterpret_cast<LPARAM>(&cell));
     }
+}
+
+void MyTable::SetSelectionCallback(std::function<void(int)> callback)
+{
+    onSelectionChanged = callback;
 }

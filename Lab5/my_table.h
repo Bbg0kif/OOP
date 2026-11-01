@@ -4,6 +4,7 @@
 #include <array>
 #include <string>
 #include <vector>
+#include <functional>
 
 class MyTable
 {
@@ -13,6 +14,8 @@ public:
     bool ProcessDialogMessage(MSG& message) const;
 
     void Add(const std::string& name, long x1, long y1, long x2, long y2);
+
+    void SetSelectionCallback(std::function<void(int)> callback);
 
 private:
     HWND dialog = nullptr;
@@ -24,5 +27,7 @@ private:
     std::vector<Row> rows;
 
     void ShowRow(const Row& row);
+
+    std::function<void(int)> onSelectionChanged;
 
 };
