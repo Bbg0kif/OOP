@@ -25,6 +25,7 @@
 #define IDM_ELLIPSE                     41004
 #define IDM_LINEOO                      41005
 #define IDM_CUBE                        41006
+#define IDM_OBJECT_TABLE                41007
 
 // Next default values for new objects
 //

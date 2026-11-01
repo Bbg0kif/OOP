@@ -14,10 +14,12 @@
 #include "line_oo_shape.h"
 #include "cube_shape.h"
 #include "toolbar.h"
+#include "my_table.h"
 
 #define MAX_LOADSTRING 100
 
 Toolbar toolbar;
+MyTable objectTable;
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
@@ -58,6 +60,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     // Main message loop:
     while (GetMessage(&msg, nullptr, 0, 0))
     {
+        if (objectTable.ProcessDialogMessage(msg))
+            continue;
         if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
         {
             TranslateMessage(&msg);
@@ -263,6 +267,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             editor.CancelDrawing(hWnd);
             editor.Start(new CubeShape());
             break;
+        case IDM_OBJECT_TABLE:
+            if (!objectTable.Toggle(hWnd, hInst))
+            {
+                MessageBoxW(hWnd, L"Could not open the object table.",
+                    L"Lab5", MB_OK | MB_ICONERROR);
+            }
+            break;
         case IDM_ABOUT:
             DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
             break;
@@ -348,6 +359,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         return 0;
     }
     case WM_DESTROY:
+        objectTable.Close();
         PostQuitMessage(0);
         break;
     default:

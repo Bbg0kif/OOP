@@ -146,9 +146,12 @@
     <ClInclude Include="line_oo_shape.h" />
     <ClInclude Include="line_shape.h" />
     <ClInclude Include="my_editor.h" />
+    <ClInclude Include="my_table.h" />
+    <ClInclude Include="my_table_ids.h" />
     <ClInclude Include="point_shape.h" />
     <ClInclude Include="rect_shape.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="resource1.h" />
     <ClInclude Include="shape.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="toolbar.h" />
@@ -160,6 +163,7 @@
     <ClCompile Include="line_oo_shape.cpp" />
     <ClCompile Include="line_shape.cpp" />
     <ClCompile Include="my_editor.cpp" />
+    <ClCompile Include="my_table.cpp" />
     <ClCompile Include="point_shape.cpp" />
     <ClCompile Include="rect_shape.cpp" />
     <ClCompile Include="shape.cpp" />
@@ -167,6 +171,7 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Lab5.rc" />
+    <ResourceCompile Include="my_table.rc" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Lab5.ico" />
