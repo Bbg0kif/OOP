@@ -16,6 +16,7 @@ public:
     void Add(const std::string& name, long x1, long y1, long x2, long y2);
 
     void SetSelectionCallback(std::function<void(int)> callback);
+    void SetDeleteCallback(std::function<bool(int)> callback);
 
 private:
     HWND dialog = nullptr;
@@ -29,5 +30,6 @@ private:
     void ShowRow(const Row& row);
 
     std::function<void(int)> onSelectionChanged;
+    std::function<bool(int)> onDeleteRequested;
 
 };

@@ -113,12 +113,39 @@ INT_PTR CALLBACK MyTable::DialogProc(
     }
 
     case WM_COMMAND:
+    {
         if (LOWORD(wParam) == IDCANCEL)
         {
             DestroyWindow(hDlg);
             return TRUE;
         }
+
+        if (LOWORD(wParam) == IDC_DELETE_SHAPE &&
+            HIWORD(wParam) == BN_CLICKED)
+        {
+            MyTable* self = reinterpret_cast<MyTable*>(
+                GetWindowLongPtrW(hDlg, DWLP_USER));
+
+            HWND list = GetDlgItem(hDlg, IDC_OBJECT_LIST);
+            int index = ListView_GetNextItem(list, -1, LVNI_SELECTED);
+
+            if (self == nullptr || index < 0 ||
+                index >= static_cast<int>(self->rows.size()))
+            {
+                return TRUE;
+            }
+
+            if (self->onDeleteRequested && self->onDeleteRequested(index))
+            {
+                self->rows.erase(self->rows.begin() + index);
+                ListView_DeleteItem(list, index);
+            }
+
+            return TRUE;
+        }
+
         break;
+    }
 
     case WM_CLOSE:
         DestroyWindow(hDlg);
@@ -193,4 +220,9 @@ void MyTable::ShowRow(const Row& row)
 void MyTable::SetSelectionCallback(std::function<void(int)> callback)
 {
     onSelectionChanged = callback;
+}
+
+void MyTable::SetDeleteCallback(std::function<bool(int)> callback)
+{
+    onDeleteRequested = callback;
 }

@@ -170,3 +170,22 @@ void MyEditor::HighlightShape(int index)
     highlightedIndex =
         (index >= 0 && index < shapeCount) ? index : -1;
 }
+
+bool MyEditor::RemoveShape(int index)
+{
+    if (index < 0 || index >= shapeCount)
+        return false;
+
+    delete pshape[index];
+
+    for (int i = index; i + 1 < shapeCount; ++i)
+    {
+        pshape[i] = pshape[i + 1];
+    }
+
+    --shapeCount;
+    pshape[shapeCount] = nullptr;
+    highlightedIndex = -1;
+
+    return true;
+}

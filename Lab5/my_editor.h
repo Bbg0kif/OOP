@@ -40,5 +40,5 @@ public:
     void CancelDrawing(HWND hWnd);
 
     void HighlightShape(int index);
-
+    bool RemoveShape(int index);
 };

@@ -164,6 +164,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 InvalidateRect(hWnd, nullptr, FALSE);
             });
 
+        objectTable.SetDeleteCallback([hWnd](int index)
+            {
+                if (!MyEditor::GetInstance().RemoveShape(index))
+                    return false;
+
+                InvalidateRect(hWnd, nullptr, FALSE);
+                return true;
+            });
+
         editor.Start(new PointShape());
 
         CheckMenuRadioItem(
