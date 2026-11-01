@@ -1,0 +1,6 @@
+PointShape	60	90	60	90
+LineShape	90	100	200	150
+RectShape	245	85	370	155
+EllipseShape	470	120	530	155
+LineOOShape	85	240	220	265
+CubeShape	315	235	380	300
