@@ -17,9 +17,6 @@
 
 #define MAX_LOADSTRING 100
 
-// Journal number 1: an editor with static storage duration.
-MyEditor editor;
-
 Toolbar toolbar;
 
 // Global Variables:
@@ -139,6 +136,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    MyEditor& editor = MyEditor::GetInstance();
+
     switch (message)
     {
     case WM_CREATE:

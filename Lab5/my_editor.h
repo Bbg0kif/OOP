@@ -17,9 +17,10 @@ private:
 
     void AddShape(Shape* shape);
 
-public:
     MyEditor();
     ~MyEditor();
+public:
+    static MyEditor& GetInstance();
 
     // The editor owns its array and shapes.
     MyEditor(const MyEditor&) = delete;

@@ -1,6 +1,12 @@
 #include "framework.h"
 #include "my_editor.h"
 
+MyEditor& MyEditor::GetInstance()
+{
+    static MyEditor instance;
+    return instance;
+}
+
 MyEditor::MyEditor()
     : pshape(nullptr),
     shapeCount(0),
