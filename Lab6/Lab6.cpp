@@ -543,6 +543,121 @@ void CheckObject3Work(HWND hWnd)
     }
 }
 
+void PlaceApplicationWindow(
+    HWND window,
+    int x,
+    int y,
+    int width,
+    int height)
+{
+    if (!IsWindow(window))
+    {
+        return;
+    }
+
+    // Restore minimized or maximized windows before positioning.
+    if (IsIconic(window) || IsZoomed(window))
+    {
+        ShowWindowAsync(window, SW_RESTORE);
+    }
+
+    SetWindowPos(
+        window,
+        HWND_TOP,
+        x,
+        y,
+        width,
+        height,
+        SWP_NOACTIVATE |
+        SWP_SHOWWINDOW |
+        SWP_ASYNCWINDOWPOS
+    );
+}
+
+void ArrangeApplicationWindows(HWND manager)
+{
+    HWND object2 = FindWindowW(
+        MatrixProtocol::Object2Class,
+        nullptr
+    );
+
+    HWND object3 = FindWindowW(
+        MatrixProtocol::Object3Class,
+        nullptr
+    );
+
+    if (object2 == nullptr || object3 == nullptr)
+    {
+        return;
+    }
+
+    // Use the monitor containing the manager window.
+    HMONITOR monitor = MonitorFromWindow(
+        manager,
+        MONITOR_DEFAULTTONEAREST
+    );
+
+    MONITORINFO info{};
+    info.cbSize = sizeof(info);
+
+    if (!GetMonitorInfoW(monitor, &info))
+    {
+        return;
+    }
+
+    // Leave the Windows taskbar outside the layout.
+    const RECT work = info.rcWork;
+    constexpr int gap = 10;
+
+    const int availableWidth =
+        work.right - work.left - 3 * gap;
+
+    const int availableHeight =
+        work.bottom - work.top - 2 * gap;
+
+    if (availableWidth <= 0 || availableHeight <= gap)
+    {
+        return;
+    }
+
+    const int matrixWidth = availableWidth * 2 / 3;
+    const int rightWidth = availableWidth - matrixWidth;
+
+    const int managerHeight = availableHeight / 3;
+    const int resultHeight =
+        availableHeight - managerHeight - gap;
+
+    const int left = work.left + gap;
+    const int top = work.top + gap;
+    const int rightColumn = left + matrixWidth + gap;
+
+    PlaceApplicationWindow(
+        object2,
+        left,
+        top,
+        matrixWidth,
+        availableHeight
+    );
+
+    PlaceApplicationWindow(
+        object3,
+        rightColumn,
+        top + managerHeight + gap,
+        rightWidth,
+        resultHeight
+    );
+
+    PlaceApplicationWindow(
+        manager,
+        rightColumn,
+        top,
+        rightWidth,
+        managerHeight
+    );
+
+    SetForegroundWindow(manager);
+}
+
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
                      _In_ LPWSTR    lpCmdLine,
@@ -677,6 +792,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
 
         StopObject3Waiting(hWnd);
+        ArrangeApplicationWindows(hWnd);
 
         if (wParam == 0)
         {
