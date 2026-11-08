@@ -36,6 +36,8 @@ namespace
     bool waitingForObject2 = false;
     ULONGLONG object2StartupTime = 0;
     MatrixParams pendingParams{};
+
+    bool closeRequested = false;
 }
 
 void StartObject3OrSend(HWND hWnd);
@@ -658,6 +660,39 @@ void ArrangeApplicationWindows(HWND manager)
     SetForegroundWindow(manager);
 }
 
+void CloseHelperApplications()
+{
+    const HWND object2 = FindWindowW(
+        MatrixProtocol::Object2Class,
+        nullptr
+    );
+
+    const HWND object3 = FindWindowW(
+        MatrixProtocol::Object3Class,
+        nullptr
+    );
+
+    if (object2 != nullptr)
+    {
+        PostMessageW(object2, WM_CLOSE, 0, 0);
+    }
+
+    if (object3 != nullptr)
+    {
+        PostMessageW(object3, WM_CLOSE, 0, 0);
+    }
+}
+
+void FinishCloseIfReady(HWND hWnd)
+{
+    if (closeRequested &&
+        !waitingForObject2 &&
+        !waitingForObject3)
+    {
+        DestroyWindow(hWnd);
+    }
+}
+
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
                      _In_ LPWSTR    lpCmdLine,
@@ -770,12 +805,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         if (wParam == Object2StartupTimer)
         {
             CheckObject2Startup(hWnd);
+            FinishCloseIfReady(hWnd);
             return 0;
         }
 
         if (wParam == Object3WorkTimer)
         {
             CheckObject3Work(hWnd);
+            FinishCloseIfReady(hWnd);
             return 0;
         }
 
@@ -792,18 +829,23 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
 
         StopObject3Waiting(hWnd);
-        ArrangeApplicationWindows(hWnd);
 
-        if (wParam == 0)
+        if (!closeRequested)
         {
-            MessageBoxW(
-                hWnd,
-                L"Object3 could not process the matrix. Check its window.",
-                L"Calculation error",
-                MB_OK | MB_ICONERROR
-            );
+            ArrangeApplicationWindows(hWnd);
+
+            if (wParam == 0)
+            {
+                MessageBoxW(
+                    hWnd,
+                    L"Object3 could not process the matrix. Check its window.",
+                    L"Calculation error",
+                    MB_OK | MB_ICONERROR
+                );
+            }
         }
 
+        FinishCloseIfReady(hWnd);
         return 0;
     }
     case WM_COMMAND:
@@ -814,6 +856,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             {
             case IDM_RUN:
             {
+                if (closeRequested)
+                {
+                    break;
+                }
+
                 if (waitingForObject2 || waitingForObject3)
                 {
                     MessageBoxW(
@@ -856,7 +903,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
                 break;
             case IDM_EXIT:
-                DestroyWindow(hWnd);
+                PostMessageW(hWnd, WM_CLOSE, 0, 0);
                 break;
             default:
                 return DefWindowProc(hWnd, message, wParam, lParam);
@@ -871,9 +918,27 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             EndPaint(hWnd, &ps);
         }
         break;
+    case WM_CLOSE:
+        closeRequested = true;
+
+        if (waitingForObject2 || waitingForObject3)
+        {
+            SetWindowTextW(
+                hWnd,
+                L"Lab6 - finishing the current request..."
+            );
+        }
+
+        FinishCloseIfReady(hWnd);
+        return 0;
     case WM_DESTROY:
+        KillTimer(hWnd, Object2StartupTimer);
+        KillTimer(hWnd, Object3WorkTimer);
+
+        CloseHelperApplications();
+
         PostQuitMessage(0);
-        break;
+        return 0;
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
