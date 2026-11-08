@@ -17,6 +17,142 @@ BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
+struct MatrixParams
+{
+    int size = 3;
+    int minValue = -10;
+    int maxValue = 10;
+};
+
+INT_PTR CALLBACK MatrixParamsProc(
+    HWND hDlg,
+    UINT message,
+    WPARAM wParam,
+    LPARAM lParam)
+{
+    switch (message)
+    {
+    case WM_INITDIALOG:
+    {
+        MatrixParams* params =
+            reinterpret_cast<MatrixParams*>(lParam);
+
+        SetWindowLongPtrW(
+            hDlg,
+            DWLP_USER,
+            reinterpret_cast<LONG_PTR>(params)
+        );
+
+        SetDlgItemInt(hDlg, IDC_MATRIX_SIZE, params->size, TRUE);
+        SetDlgItemInt(hDlg, IDC_MATRIX_MIN, params->minValue, TRUE);
+        SetDlgItemInt(hDlg, IDC_MATRIX_MAX, params->maxValue, TRUE);
+
+        return TRUE;
+    }
+
+    case WM_COMMAND:
+        switch (LOWORD(wParam))
+        {
+        case IDOK:
+        {
+            BOOL sizeValid = FALSE;
+            BOOL minValid = FALSE;
+            BOOL maxValid = FALSE;
+
+            const int size = static_cast<int>(
+                GetDlgItemInt(
+                    hDlg, IDC_MATRIX_SIZE, &sizeValid, TRUE)
+                );
+
+            const int minValue = static_cast<int>(
+                GetDlgItemInt(
+                    hDlg, IDC_MATRIX_MIN, &minValid, TRUE)
+                );
+
+            const int maxValue = static_cast<int>(
+                GetDlgItemInt(
+                    hDlg, IDC_MATRIX_MAX, &maxValid, TRUE)
+                );
+
+            if (!sizeValid || !minValid || !maxValid)
+            {
+                MessageBoxW(
+                    hDlg,
+                    L"Enter an integer in each field.",
+                    L"Invalid input",
+                    MB_OK | MB_ICONWARNING
+                );
+                return TRUE;
+            }
+
+            // Application limits for matrix size and element values.
+            if (size < 1 || size > 10)
+            {
+                MessageBoxW(
+                    hDlg,
+                    L"Matrix size must be between 1 and 10.",
+                    L"Invalid input",
+                    MB_OK | MB_ICONWARNING
+                );
+                return TRUE;
+            }
+
+            if (minValue < -1000 || minValue > 1000 ||
+                maxValue < -1000 || maxValue > 1000)
+            {
+                MessageBoxW(
+                    hDlg,
+                    L"Min and Max must be between -1000 and 1000.",
+                    L"Invalid input",
+                    MB_OK | MB_ICONWARNING
+                );
+                return TRUE;
+            }
+
+            if (minValue > maxValue)
+            {
+                MessageBoxW(
+                    hDlg,
+                    L"Min must not be greater than Max.",
+                    L"Invalid input",
+                    MB_OK | MB_ICONWARNING
+                );
+                return TRUE;
+            }
+
+            MatrixParams* params =
+                reinterpret_cast<MatrixParams*>(
+                    GetWindowLongPtrW(hDlg, DWLP_USER)
+                    );
+
+            if (params == nullptr)
+            {
+                EndDialog(hDlg, IDCANCEL);
+                return TRUE;
+            }
+
+            params->size = size;
+            params->minValue = minValue;
+            params->maxValue = maxValue;
+
+            EndDialog(hDlg, IDOK);
+            return TRUE;
+        }
+
+        case IDCANCEL:
+            EndDialog(hDlg, IDCANCEL);
+            return TRUE;
+        }
+        break;
+
+    case WM_CLOSE:
+        EndDialog(hDlg, IDCANCEL);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
                      _In_ LPWSTR    lpCmdLine,
@@ -131,6 +267,40 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             // Parse the menu selections:
             switch (wmId)
             {
+            case IDM_RUN:
+            {
+                MatrixParams params{};
+
+                const INT_PTR result = DialogBoxParamW(
+                    hInst,
+                    MAKEINTRESOURCEW(IDD_MATRIX_PARAMS),
+                    hWnd,
+                    MatrixParamsProc,
+                    reinterpret_cast<LPARAM>(&params)
+                );
+
+                if (result == IDOK)
+                {
+                    // Temporary confirmation for this implementation stage.
+                    MessageBoxW(
+                        hWnd,
+                        L"Parameters accepted.",
+                        L"Lab6",
+                        MB_OK | MB_ICONINFORMATION
+                    );
+                }
+                else if (result == -1)
+                {
+                    MessageBoxW(
+                        hWnd,
+                        L"Failed to create the parameters dialog.",
+                        L"Lab6",
+                        MB_OK | MB_ICONERROR
+                    );
+                }
+
+                break;
+            }
             case IDM_ABOUT:
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
                 break;

@@ -16,6 +16,13 @@
 #ifndef IDC_STATIC
 #define IDC_STATIC				-1
 #endif
+
+#define IDM_RUN                 41010
+#define IDD_MATRIX_PARAMS       301
+#define IDC_MATRIX_SIZE         1301
+#define IDC_MATRIX_MIN          1302
+#define IDC_MATRIX_MAX          1303
+
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED
