@@ -3,6 +3,7 @@
 
 #include "framework.h"
 #include "Lab6.h"
+#include "matrix_protocol.h"
 
 #define MAX_LOADSTRING 100
 
@@ -17,12 +18,7 @@ BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
-struct MatrixParams
-{
-    int size = 3;
-    int minValue = -10;
-    int maxValue = 10;
-};
+using MatrixParams = MatrixProtocol::Parameters;
 
 INT_PTR CALLBACK MatrixParamsProc(
     HWND hDlg,
@@ -153,6 +149,56 @@ INT_PTR CALLBACK MatrixParamsProc(
     return FALSE;
 }
 
+bool SendParametersToObject2(
+    HWND sender,
+    const MatrixParams& params)
+{
+    HWND receiver = FindWindowW(
+        MatrixProtocol::Object2Class,
+        nullptr
+    );
+
+    if (receiver == nullptr)
+    {
+        MessageBoxW(
+            sender,
+            L"Open Object2 first, then try again.",
+            L"Object2 is not running",
+            MB_OK | MB_ICONWARNING
+        );
+
+        return false;
+    }
+
+    MatrixParams payload = params;
+
+    COPYDATASTRUCT data{};
+    data.dwData = MatrixProtocol::GenerateMatrixCommand;
+    data.cbData = static_cast<DWORD>(sizeof(payload));
+    data.lpData = &payload;
+
+    const LRESULT accepted = SendMessageW(
+        receiver,
+        WM_COPYDATA,
+        reinterpret_cast<WPARAM>(sender),
+        reinterpret_cast<LPARAM>(&data)
+    );
+
+    if (accepted == FALSE)
+    {
+        MessageBoxW(
+            sender,
+            L"Object2 did not accept the parameters.",
+            L"Communication error",
+            MB_OK | MB_ICONERROR
+        );
+
+        return false;
+    }
+
+    return true;
+}
+
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
                      _In_ LPWSTR    lpCmdLine,
@@ -281,14 +327,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
                 if (result == IDOK)
                 {
-                    // Temporary confirmation for this implementation stage.
-                    MessageBoxW(
-                        hWnd,
-                        L"Parameters accepted.",
-                        L"Lab6",
-                        MB_OK | MB_ICONINFORMATION
-                    );
+                    SendParametersToObject2(hWnd, params);
                 }
+
                 else if (result == -1)
                 {
                     MessageBoxW(

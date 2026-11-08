@@ -157,6 +157,7 @@
   <ItemGroup>
     <ClInclude Include="framework.h" />
     <ClInclude Include="Lab6.h" />
+    <ClInclude Include="matrix_protocol.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>

@@ -7,6 +7,8 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include "../matrix_protocol.h"
+#include <cstring>
 
 #define MAX_LOADSTRING 100
 
@@ -133,7 +135,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadStringW(hInstance, IDC_OBJECT2, szWindowClass, MAX_LOADSTRING);
+    lstrcpynW(
+        szWindowClass,
+        MatrixProtocol::Object2Class,
+        MAX_LOADSTRING
+    );
     MyRegisterClass(hInstance);
 
     // Perform application initialization:
@@ -229,10 +235,42 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
-    case WM_CREATE:
-        // Temporary input for testing before IPC is connected.
-        GenerateMatrix(3, -10, 10);
-        return 0;
+    case WM_COPYDATA:
+    {
+        const COPYDATASTRUCT* data =
+            reinterpret_cast<const COPYDATASTRUCT*>(lParam);
+
+        if (data == nullptr ||
+            data->dwData != MatrixProtocol::GenerateMatrixCommand ||
+            data->cbData != sizeof(MatrixProtocol::Parameters) ||
+            data->lpData == nullptr)
+        {
+            return FALSE;
+        }
+
+        MatrixProtocol::Parameters params{};
+
+        std::memcpy(
+            &params,
+            data->lpData,
+            sizeof(params)
+        );
+
+        if (!MatrixProtocol::IsValid(params))
+        {
+            return FALSE;
+        }
+
+        GenerateMatrix(
+            params.size,
+            params.minValue,
+            params.maxValue
+        );
+
+        InvalidateRect(hWnd, nullptr, TRUE);
+
+        return TRUE;
+    }
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
