@@ -56,6 +56,88 @@ namespace
             L", " + std::to_wstring(maxValue) + L"]";
     }
 
+    std::wstring MatrixToText()
+    {
+        std::wostringstream text;
+
+        // The first line contains the matrix size.
+        text << matrixSize << L"\r\n";
+
+        for (int row = 0; row < matrixSize; ++row)
+        {
+            for (int column = 0; column < matrixSize; ++column)
+            {
+                if (column != 0)
+                {
+                    text << L'\t';
+                }
+
+                const size_t index =
+                    static_cast<size_t>(row) * matrixSize + column;
+
+                text << matrix[index];
+            }
+
+            text << L"\r\n";
+        }
+
+        return text.str();
+    }
+
+    bool CopyMatrixToClipboard(HWND hWnd)
+    {
+        if (matrixSize == 0)
+        {
+            return false;
+        }
+
+        const std::wstring text = MatrixToText();
+        const SIZE_T bytes = (text.size() + 1) * sizeof(wchar_t);
+
+        HGLOBAL memory = GlobalAlloc(GMEM_MOVEABLE, bytes);
+
+        if (memory == nullptr)
+        {
+            return false;
+        }
+
+        void* buffer = GlobalLock(memory);
+
+        if (buffer == nullptr)
+        {
+            GlobalFree(memory);
+            return false;
+        }
+
+        // Include the terminating null character.
+        std::memcpy(buffer, text.c_str(), bytes);
+        GlobalUnlock(memory);
+
+        if (!OpenClipboard(hWnd))
+        {
+            GlobalFree(memory);
+            return false;
+        }
+
+        if (!EmptyClipboard())
+        {
+            CloseClipboard();
+            GlobalFree(memory);
+            return false;
+        }
+
+        if (SetClipboardData(CF_UNICODETEXT, memory) == nullptr)
+        {
+            CloseClipboard();
+            GlobalFree(memory);
+            return false;
+        }
+
+        // Windows owns the memory after successful SetClipboardData.
+        CloseClipboard();
+        return true;
+    }
+
     void PaintMatrix(HWND hWnd, HDC hdc)
     {
         RECT client{};
@@ -267,9 +349,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             params.maxValue
         );
 
+        const bool copied = CopyMatrixToClipboard(hWnd);
+
+        if (copied)
+        {
+            matrixStatus += L" - copied to clipboard";
+        }
+        else
+        {
+            matrixStatus += L" - clipboard write failed";
+        }
+
         InvalidateRect(hWnd, nullptr, TRUE);
 
-        return TRUE;
+        return copied ? TRUE : FALSE;
     }
     case WM_COMMAND:
         {

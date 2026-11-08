@@ -199,7 +199,7 @@ bool SendParametersToObject2(
     {
         MessageBoxW(
             sender,
-            L"Object2 did not accept the parameters.",
+            L"Object2 could not complete the request. Check its status and try again.",
             L"Communication error",
             MB_OK | MB_ICONERROR
         );
