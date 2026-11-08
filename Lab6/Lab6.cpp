@@ -40,6 +40,67 @@ namespace
     MatrixParams pendingParams{};
 
     bool closeRequested = false;
+    HANDLE object2StartupProcess = nullptr;
+    HANDLE object3StartupProcess = nullptr;
+}
+
+void ReleaseProcessHandle(HANDLE& process)
+{
+    if (process != nullptr)
+    {
+        CloseHandle(process);
+        process = nullptr;
+    }
+}
+
+bool CancelStartupProcess(HANDLE& process)
+{
+    if (process == nullptr)
+    {
+        return true;
+    }
+
+    // The process may already have exited on its own.
+    if (WaitForSingleObject(process, 0) == WAIT_OBJECT_0)
+    {
+        ReleaseProcessHandle(process);
+        return true;
+    }
+
+    // Only cancel a process launched by this application
+    // whose window has not yet been accepted as ready.
+    if (!TerminateProcess(process, ERROR_TIMEOUT))
+    {
+        // It might have exited between the two checks.
+        if (WaitForSingleObject(process, 0) != WAIT_OBJECT_0)
+        {
+            return false;
+        }
+    }
+
+    ReleaseProcessHandle(process);
+    return true;
+}
+
+HWND FindStartupWindow(const wchar_t* className, HANDLE process)
+{
+    HWND window = FindWindowW(className, nullptr);
+
+    if (window == nullptr || process == nullptr)
+    {
+        return window;
+    }
+
+    DWORD windowProcessId = 0;
+    GetWindowThreadProcessId(window, &windowProcessId);
+
+    // Do not mistake another instance for the process we started.
+    if (windowProcessId != GetProcessId(process))
+    {
+        return nullptr;
+    }
+
+    return window;
 }
 
 void StartObject3OrSend(HWND hWnd);
@@ -399,7 +460,7 @@ void StartObject2OrSend(
     }
 
     CloseHandle(process.hThread);
-    CloseHandle(process.hProcess);
+    object2StartupProcess = process.hProcess;
 }
 
 void CheckObject2Startup(HWND hWnd)
@@ -409,13 +470,15 @@ void CheckObject2Startup(HWND hWnd)
         return;
     }
 
-    HWND receiver = FindWindowW(
+    HWND receiver = FindStartupWindow(
         MatrixProtocol::Object2Class,
-        nullptr
+        object2StartupProcess
     );
 
     if (receiver != nullptr)
     {
+        ReleaseProcessHandle(object2StartupProcess);
+
         KillTimer(hWnd, Object2StartupTimer);
         waitingForObject2 = false;
 
@@ -425,12 +488,30 @@ void CheckObject2Startup(HWND hWnd)
 
     if (GetTickCount64() - object2StartupTime >= StartupTimeoutMs)
     {
+        if (!CancelStartupProcess(object2StartupProcess))
+        {
+            // Keep tracking this process instead of losing it
+            // or allowing another instance to be launched.
+            object2StartupTime = GetTickCount64();
+
+            MessageBoxW(
+                hWnd,
+                L"Cannot cancel the Object2 startup.\r\n"
+                L"Lab6 will continue monitoring it.",
+                L"Startup error",
+                MB_OK | MB_ICONERROR
+            );
+
+            return;
+        }
+
         KillTimer(hWnd, Object2StartupTimer);
         waitingForObject2 = false;
 
         MessageBoxW(
             hWnd,
-            L"Object2 did not create its window within 10 seconds.",
+            L"Object2 did not create its window within 10 seconds.\r\n"
+            L"The startup was cancelled.",
             L"Startup timeout",
             MB_OK | MB_ICONERROR
         );
@@ -552,7 +633,7 @@ void StartObject3OrSend(HWND hWnd)
     }
 
     CloseHandle(process.hThread);
-    CloseHandle(process.hProcess);
+    object3StartupProcess = process.hProcess;
 }
 
 void CheckObject3Work(HWND hWnd)
@@ -564,6 +645,21 @@ void CheckObject3Work(HWND hWnd)
 
     if (GetTickCount64() - object3StartTime >= StartupTimeoutMs)
     {
+        if (!CancelStartupProcess(object3StartupProcess))
+        {
+            object3StartTime = GetTickCount64();
+
+            MessageBoxW(
+                hWnd,
+                L"Cannot cancel the Object3 startup.\r\n"
+                L"Lab6 will continue monitoring it.",
+                L"Startup error",
+                MB_OK | MB_ICONERROR
+            );
+
+            return;
+        }
+
         StopObject3Waiting(hWnd);
 
         MessageBoxW(
@@ -580,15 +676,17 @@ void CheckObject3Work(HWND hWnd)
         return;
     }
 
-    object3Window = FindWindowW(
+    object3Window = FindStartupWindow(
         MatrixProtocol::Object3Class,
-        nullptr
+        object3StartupProcess
     );
 
     if (object3Window == nullptr)
     {
         return;
     }
+
+    ReleaseProcessHandle(object3StartupProcess);
 
     object3RequestSent = true;
 
