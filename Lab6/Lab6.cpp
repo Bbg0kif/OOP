@@ -245,12 +245,30 @@ bool SendParametersToObject2(
     data.cbData = static_cast<DWORD>(sizeof(payload));
     data.lpData = &payload;
 
-    const LRESULT accepted = SendMessageW(
+    DWORD_PTR accepted = FALSE;
+
+    const LRESULT delivered = SendMessageTimeoutW(
         receiver,
         WM_COPYDATA,
         reinterpret_cast<WPARAM>(sender),
-        reinterpret_cast<LPARAM>(&data)
+        reinterpret_cast<LPARAM>(&data),
+        SMTO_ABORTIFHUNG | SMTO_BLOCK | SMTO_ERRORONEXIT,
+        3000,
+        &accepted
     );
+
+    if (delivered == 0)
+    {
+        MessageBoxW(
+            sender,
+            L"Object2 did not respond in time or communication failed.\r\n"
+            L"Check Object2 and try again.",
+            L"Communication error",
+            MB_OK | MB_ICONERROR
+        );
+
+        return false;
+    }
 
     if (accepted == FALSE)
     {
