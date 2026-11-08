@@ -6,6 +6,7 @@
 #include "matrix_protocol.h"
 #include <string>
 #include <vector>
+#include <sstream>
 
 #define MAX_LOADSTRING 100
 
@@ -43,6 +44,54 @@ namespace
 
 void StartObject3OrSend(HWND hWnd);
 
+bool ReadIntegerField(HWND dialog, int controlId, int& value)
+{
+    HWND control = GetDlgItem(dialog, controlId);
+
+    if (control == nullptr)
+    {
+        return false;
+    }
+
+    wchar_t buffer[64]{};
+
+    const int length = GetWindowTextLengthW(control);
+
+    // Reject empty input and text that would be truncated.
+    if (length <= 0 ||
+        length >= static_cast<int>(_countof(buffer)))
+    {
+        return false;
+    }
+
+    if (GetWindowTextW(
+        control,
+        buffer,
+        static_cast<int>(_countof(buffer))) != length)
+    {
+        return false;
+    }
+
+    std::wistringstream input(buffer);
+    int parsed = 0;
+
+    if (!(input >> parsed))
+    {
+        return false;
+    }
+
+    // Allow surrounding whitespace, but no extra characters.
+    input >> std::ws;
+
+    if (!input.eof())
+    {
+        return false;
+    }
+
+    value = parsed;
+    return true;
+}
+
 INT_PTR CALLBACK MatrixParamsProc(
     HWND hDlg,
     UINT message,
@@ -74,33 +123,29 @@ INT_PTR CALLBACK MatrixParamsProc(
         {
         case IDOK:
         {
-            BOOL sizeValid = FALSE;
-            BOOL minValid = FALSE;
-            BOOL maxValid = FALSE;
+            int size = 0;
+            int minValue = 0;
+            int maxValue = 0;
 
-            const int size = static_cast<int>(
-                GetDlgItemInt(
-                    hDlg, IDC_MATRIX_SIZE, &sizeValid, TRUE)
-                );
+            const bool sizeValid =
+                ReadIntegerField(hDlg, IDC_MATRIX_SIZE, size);
 
-            const int minValue = static_cast<int>(
-                GetDlgItemInt(
-                    hDlg, IDC_MATRIX_MIN, &minValid, TRUE)
-                );
+            const bool minValid =
+                ReadIntegerField(hDlg, IDC_MATRIX_MIN, minValue);
 
-            const int maxValue = static_cast<int>(
-                GetDlgItemInt(
-                    hDlg, IDC_MATRIX_MAX, &maxValid, TRUE)
-                );
+            const bool maxValid =
+                ReadIntegerField(hDlg, IDC_MATRIX_MAX, maxValue);
 
             if (!sizeValid || !minValid || !maxValid)
             {
                 MessageBoxW(
                     hDlg,
-                    L"Enter an integer in each field.",
+                    L"Enter one whole integer in each field.\r\n"
+                    L"Letters, fractions and extra numbers are not allowed.",
                     L"Invalid input",
                     MB_OK | MB_ICONWARNING
                 );
+
                 return TRUE;
             }
 
