@@ -5,6 +5,7 @@
 #include "Lab6.h"
 #include "matrix_protocol.h"
 #include <string>
+#include <vector>
 
 #define MAX_LOADSTRING 100
 
@@ -239,15 +240,15 @@ void StartObject2OrSend(
     }
 
     // Locate Object2.exe beside Lab6.exe.
-    wchar_t modulePath[32768]{};
+    std::vector<wchar_t> modulePath(32768);
 
     const DWORD length = GetModuleFileNameW(
         nullptr,
-        modulePath,
-        static_cast<DWORD>(_countof(modulePath))
+        modulePath.data(),
+        static_cast<DWORD>(modulePath.size())
     );
 
-    if (length == 0 || length >= _countof(modulePath))
+    if (length == 0 || length >= modulePath.size())
     {
         MessageBoxW(
             hWnd,
@@ -258,7 +259,7 @@ void StartObject2OrSend(
         return;
     }
 
-    const std::wstring fullPath(modulePath, length);
+    const std::wstring fullPath(modulePath.data(), length);
     const size_t separator = fullPath.find_last_of(L"\\/");
 
     if (separator == std::wstring::npos)
@@ -411,15 +412,15 @@ void StartObject3OrSend(HWND hWnd)
         return;
     }
 
-    wchar_t modulePath[32768]{};
+    std::vector<wchar_t> modulePath(32768);
 
     const DWORD length = GetModuleFileNameW(
         nullptr,
-        modulePath,
-        static_cast<DWORD>(_countof(modulePath))
+        modulePath.data(),
+        static_cast<DWORD>(modulePath.size())
     );
 
-    if (length == 0 || length >= _countof(modulePath))
+    if (length == 0 || length >= modulePath.size())
     {
         StopObject3Waiting(hWnd);
 
@@ -432,7 +433,7 @@ void StartObject3OrSend(HWND hWnd)
         return;
     }
 
-    const std::wstring fullPath(modulePath, length);
+    const std::wstring fullPath(modulePath.data(), length);
     const size_t separator = fullPath.find_last_of(L"\\/");
 
     if (separator == std::wstring::npos)
