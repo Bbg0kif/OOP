@@ -4,6 +4,7 @@
 #include "framework.h"
 #include "Lab6.h"
 #include "matrix_protocol.h"
+#include <string>
 
 #define MAX_LOADSTRING 100
 
@@ -19,6 +20,16 @@ LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
 using MatrixParams = MatrixProtocol::Parameters;
+
+namespace
+{
+    constexpr UINT_PTR Object2StartupTimer = 1;
+    constexpr ULONGLONG StartupTimeoutMs = 10000;
+
+    bool waitingForObject2 = false;
+    ULONGLONG object2StartupTime = 0;
+    MatrixParams pendingParams{};
+}
 
 INT_PTR CALLBACK MatrixParamsProc(
     HWND hDlg,
@@ -199,6 +210,157 @@ bool SendParametersToObject2(
     return true;
 }
 
+void StartObject2OrSend(
+    HWND hWnd,
+    const MatrixParams& params)
+{
+    if (waitingForObject2)
+    {
+        return;
+    }
+
+    // Reuse an already running application.
+    if (FindWindowW(MatrixProtocol::Object2Class, nullptr) != nullptr)
+    {
+        SendParametersToObject2(hWnd, params);
+        return;
+    }
+
+    // Locate Object2.exe beside Lab6.exe.
+    wchar_t modulePath[32768]{};
+
+    const DWORD length = GetModuleFileNameW(
+        nullptr,
+        modulePath,
+        static_cast<DWORD>(_countof(modulePath))
+    );
+
+    if (length == 0 || length >= _countof(modulePath))
+    {
+        MessageBoxW(
+            hWnd,
+            L"Cannot determine the application folder.",
+            L"Startup error",
+            MB_OK | MB_ICONERROR
+        );
+        return;
+    }
+
+    const std::wstring fullPath(modulePath, length);
+    const size_t separator = fullPath.find_last_of(L"\\/");
+
+    if (separator == std::wstring::npos)
+    {
+        MessageBoxW(
+            hWnd,
+            L"Invalid application path.",
+            L"Startup error",
+            MB_OK | MB_ICONERROR
+        );
+        return;
+    }
+
+    const std::wstring directory =
+        fullPath.substr(0, separator + 1);
+
+    const std::wstring executable =
+        directory + L"Object2.exe";
+
+    // Set up asynchronous waiting before starting the process.
+    if (SetTimer(hWnd, Object2StartupTimer, 100, nullptr) == 0)
+    {
+        MessageBoxW(
+            hWnd,
+            L"Cannot create the startup timer.",
+            L"Startup error",
+            MB_OK | MB_ICONERROR
+        );
+        return;
+    }
+
+    pendingParams = params;
+    object2StartupTime = GetTickCount64();
+    waitingForObject2 = true;
+
+    STARTUPINFOW startup{};
+    startup.cb = sizeof(startup);
+
+    PROCESS_INFORMATION process{};
+
+    const BOOL started = CreateProcessW(
+        executable.c_str(),
+        nullptr,
+        nullptr,
+        nullptr,
+        FALSE,
+        0,
+        nullptr,
+        directory.c_str(),
+        &startup,
+        &process
+    );
+
+    if (!started)
+    {
+        const DWORD error = GetLastError();
+
+        KillTimer(hWnd, Object2StartupTimer);
+        waitingForObject2 = false;
+
+        const std::wstring message =
+            L"Cannot start Object2.exe.\n"
+            L"Build all projects and check that Object2.exe "
+            L"is beside Lab6.exe.\n\nWindows error: " +
+            std::to_wstring(error);
+
+        MessageBoxW(
+            hWnd,
+            message.c_str(),
+            L"Startup error",
+            MB_OK | MB_ICONERROR
+        );
+        return;
+    }
+
+    CloseHandle(process.hThread);
+    CloseHandle(process.hProcess);
+}
+
+void CheckObject2Startup(HWND hWnd)
+{
+    if (!waitingForObject2)
+    {
+        return;
+    }
+
+    HWND receiver = FindWindowW(
+        MatrixProtocol::Object2Class,
+        nullptr
+    );
+
+    if (receiver != nullptr)
+    {
+        KillTimer(hWnd, Object2StartupTimer);
+        waitingForObject2 = false;
+
+        SendParametersToObject2(hWnd, pendingParams);
+        return;
+    }
+
+    if (GetTickCount64() - object2StartupTime >= StartupTimeoutMs)
+    {
+        KillTimer(hWnd, Object2StartupTimer);
+        waitingForObject2 = false;
+
+        MessageBoxW(
+            hWnd,
+            L"Object2 did not create its window within 10 seconds.",
+            L"Startup timeout",
+            MB_OK | MB_ICONERROR
+        );
+    }
+}
+
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
                      _In_ LPWSTR    lpCmdLine,
@@ -307,6 +469,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
+    case WM_TIMER:
+        if (wParam == Object2StartupTimer)
+        {
+            CheckObject2Startup(hWnd);
+            return 0;
+        }
+        return DefWindowProcW(hWnd, message, wParam, lParam);
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
@@ -315,6 +484,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             {
             case IDM_RUN:
             {
+                if (waitingForObject2)
+                {
+                    MessageBoxW(
+                        hWnd,
+                        L"Object2 is starting. Please wait.",
+                        L"Lab6",
+                        MB_OK | MB_ICONINFORMATION
+                    );
+                    break;
+                }
+
                 MatrixParams params{};
 
                 const INT_PTR result = DialogBoxParamW(
@@ -327,7 +507,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
                 if (result == IDOK)
                 {
-                    SendParametersToObject2(hWnd, params);
+                    StartObject2OrSend(hWnd, params);
                 }
 
                 else if (result == -1)
