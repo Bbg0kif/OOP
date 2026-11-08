@@ -3,6 +3,10 @@
 
 #include "framework.h"
 #include "Object2.h"
+#include <random>
+#include <sstream>
+#include <string>
+#include <vector>
 
 #define MAX_LOADSTRING 100
 
@@ -16,6 +20,106 @@ ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
+
+namespace
+{
+    std::vector<int> matrix;
+    int matrixSize = 0;
+    std::wstring matrixStatus = L"Waiting for parameters.";
+
+    void GenerateMatrix(int size, int minValue, int maxValue)
+    {
+        static std::mt19937 generator{ std::random_device{}() };
+
+        std::uniform_int_distribution<int> distribution(
+            minValue, maxValue
+        );
+
+        std::vector<int> generated(
+            static_cast<size_t>(size) * size
+        );
+
+        for (int& value : generated)
+        {
+            value = distribution(generator);
+        }
+
+        matrix.swap(generated);
+        matrixSize = size;
+
+        matrixStatus =
+            L"Matrix " + std::to_wstring(size) +
+            L" x " + std::to_wstring(size) +
+            L", range [" + std::to_wstring(minValue) +
+            L", " + std::to_wstring(maxValue) + L"]";
+    }
+
+    void PaintMatrix(HWND hWnd, HDC hdc)
+    {
+        RECT client{};
+        GetClientRect(hWnd, &client);
+
+        SetBkMode(hdc, TRANSPARENT);
+        SetTextColor(hdc, RGB(0, 0, 0));
+
+        RECT titleRect{
+            16, 12,
+            client.right - 16, 52
+        };
+
+        DrawTextW(
+            hdc,
+            matrixStatus.c_str(),
+            -1,
+            &titleRect,
+            DT_LEFT | DT_WORDBREAK | DT_NOPREFIX
+        );
+
+        if (matrixSize == 0)
+        {
+            return;
+        }
+
+        constexpr int left = 16;
+        constexpr int top = 64;
+        constexpr int cellWidth = 64;
+        constexpr int cellHeight = 28;
+
+        HGDIOBJ oldFont = SelectObject(
+            hdc,
+            GetStockObject(ANSI_FIXED_FONT)
+        );
+
+        for (int row = 0; row < matrixSize; ++row)
+        {
+            for (int column = 0; column < matrixSize; ++column)
+            {
+                const size_t index =
+                    static_cast<size_t>(row) * matrixSize + column;
+
+                const std::wstring text =
+                    std::to_wstring(matrix[index]);
+
+                RECT cell{
+                    left + column * cellWidth,
+                    top + row * cellHeight,
+                    left + (column + 1) * cellWidth,
+                    top + (row + 1) * cellHeight
+                };
+
+                DrawTextW(
+                    hdc,
+                    text.c_str(),
+                    -1,
+                    &cell,
+                    DT_RIGHT | DT_SINGLELINE | DT_VCENTER
+                );
+            }
+        }
+
+        SelectObject(hdc, oldFont);
+    }
+}
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -125,6 +229,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
+    case WM_CREATE:
+        // Temporary input for testing before IPC is connected.
+        GenerateMatrix(3, -10, 10);
+        return 0;
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
@@ -143,13 +251,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         break;
     case WM_PAINT:
-        {
-            PAINTSTRUCT ps;
-            BeginPaint(hWnd, &ps);
-            // TODO: Add any drawing code here...
-            EndPaint(hWnd, &ps);
-        }
-        break;
+    {
+        PAINTSTRUCT ps{};
+        HDC hdc = BeginPaint(hWnd, &ps);
+
+        PaintMatrix(hWnd, hdc);
+
+        EndPaint(hWnd, &ps);
+        return 0;
+    }
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
