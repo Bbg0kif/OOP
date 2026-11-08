@@ -28,4 +28,11 @@ namespace MatrixProtocol
             params.maxValue <= 1000 &&
             params.minValue <= params.maxValue;
     }
+
+    constexpr wchar_t Object3Class[] = L"LAB6_OBJECT3";
+
+    // Application messages: WM_APP + 1 and WM_APP + 2.
+    constexpr unsigned int ReadMatrixMessage = 0x8001;
+    constexpr unsigned int MatrixResultMessage = 0x8002;
+
 }

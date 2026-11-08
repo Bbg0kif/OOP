@@ -9,6 +9,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include "../matrix_protocol.h"
 
 #define MAX_LOADSTRING 100
 
@@ -244,7 +245,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadStringW(hInstance, IDC_OBJECT3, szWindowClass, MAX_LOADSTRING);
+    lstrcpynW(
+        szWindowClass,
+        MatrixProtocol::Object3Class,
+        MAX_LOADSTRING
+    );
     MyRegisterClass(hInstance);
 
     // Perform application initialization:
@@ -340,10 +345,26 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
-    case WM_CREATE:
-        // Temporary trigger for testing before automatic coordination.
-        ProcessClipboardMatrix(hWnd);
+    case MatrixProtocol::ReadMatrixMessage:
+    {
+        const HWND manager = reinterpret_cast<HWND>(wParam);
+
+        if (!IsWindow(manager))
+        {
+            return 0;
+        }
+
+        const bool success = ProcessClipboardMatrix(hWnd);
+
+        PostMessageW(
+            manager,
+            MatrixProtocol::MatrixResultMessage,
+            success ? 1 : 0,
+            reinterpret_cast<LPARAM>(hWnd)
+        );
+
         return 0;
+    }
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);

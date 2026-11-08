@@ -24,12 +24,21 @@ using MatrixParams = MatrixProtocol::Parameters;
 namespace
 {
     constexpr UINT_PTR Object2StartupTimer = 1;
+    constexpr UINT_PTR Object3WorkTimer = 2;
+
+    bool waitingForObject3 = false;
+    bool object3RequestSent = false;
+    ULONGLONG object3StartTime = 0;
+    HWND object3Window = nullptr;
+
     constexpr ULONGLONG StartupTimeoutMs = 10000;
 
     bool waitingForObject2 = false;
     ULONGLONG object2StartupTime = 0;
     MatrixParams pendingParams{};
 }
+
+void StartObject3OrSend(HWND hWnd);
 
 INT_PTR CALLBACK MatrixParamsProc(
     HWND hDlg,
@@ -207,6 +216,7 @@ bool SendParametersToObject2(
         return false;
     }
 
+    StartObject3OrSend(sender);
     return true;
 }
 
@@ -361,6 +371,178 @@ void CheckObject2Startup(HWND hWnd)
     }
 }
 
+void StopObject3Waiting(HWND hWnd)
+{
+    KillTimer(hWnd, Object3WorkTimer);
+
+    waitingForObject3 = false;
+    object3RequestSent = false;
+    object3Window = nullptr;
+}
+
+void StartObject3OrSend(HWND hWnd)
+{
+    if (waitingForObject3)
+    {
+        return;
+    }
+
+    if (SetTimer(hWnd, Object3WorkTimer, 100, nullptr) == 0)
+    {
+        MessageBoxW(
+            hWnd,
+            L"Cannot create the Object3 timer.",
+            L"Lab6",
+            MB_OK | MB_ICONERROR
+        );
+        return;
+    }
+
+    waitingForObject3 = true;
+    object3RequestSent = false;
+    object3StartTime = GetTickCount64();
+    object3Window = nullptr;
+
+    // The timer will send a request to an existing window.
+    if (FindWindowW(MatrixProtocol::Object3Class, nullptr) != nullptr)
+    {
+        return;
+    }
+
+    wchar_t modulePath[32768]{};
+
+    const DWORD length = GetModuleFileNameW(
+        nullptr,
+        modulePath,
+        static_cast<DWORD>(_countof(modulePath))
+    );
+
+    if (length == 0 || length >= _countof(modulePath))
+    {
+        StopObject3Waiting(hWnd);
+
+        MessageBoxW(
+            hWnd,
+            L"Cannot determine the application folder.",
+            L"Startup error",
+            MB_OK | MB_ICONERROR
+        );
+        return;
+    }
+
+    const std::wstring fullPath(modulePath, length);
+    const size_t separator = fullPath.find_last_of(L"\\/");
+
+    if (separator == std::wstring::npos)
+    {
+        StopObject3Waiting(hWnd);
+
+        MessageBoxW(
+            hWnd,
+            L"Invalid application path.",
+            L"Startup error",
+            MB_OK | MB_ICONERROR
+        );
+        return;
+    }
+
+    const std::wstring directory =
+        fullPath.substr(0, separator + 1);
+
+    const std::wstring executable =
+        directory + L"Object3.exe";
+
+    STARTUPINFOW startup{};
+    startup.cb = sizeof(startup);
+
+    PROCESS_INFORMATION process{};
+
+    if (!CreateProcessW(
+        executable.c_str(),
+        nullptr,
+        nullptr,
+        nullptr,
+        FALSE,
+        0,
+        nullptr,
+        directory.c_str(),
+        &startup,
+        &process))
+    {
+        const DWORD error = GetLastError();
+        StopObject3Waiting(hWnd);
+
+        const std::wstring message =
+            L"Cannot start Object3.exe.\r\nWindows error: " +
+            std::to_wstring(error);
+
+        MessageBoxW(
+            hWnd,
+            message.c_str(),
+            L"Startup error",
+            MB_OK | MB_ICONERROR
+        );
+        return;
+    }
+
+    CloseHandle(process.hThread);
+    CloseHandle(process.hProcess);
+}
+
+void CheckObject3Work(HWND hWnd)
+{
+    if (!waitingForObject3)
+    {
+        return;
+    }
+
+    if (GetTickCount64() - object3StartTime >= StartupTimeoutMs)
+    {
+        StopObject3Waiting(hWnd);
+
+        MessageBoxW(
+            hWnd,
+            L"Object3 did not finish within 10 seconds.",
+            L"Timeout",
+            MB_OK | MB_ICONERROR
+        );
+        return;
+    }
+
+    if (object3RequestSent)
+    {
+        return;
+    }
+
+    object3Window = FindWindowW(
+        MatrixProtocol::Object3Class,
+        nullptr
+    );
+
+    if (object3Window == nullptr)
+    {
+        return;
+    }
+
+    object3RequestSent = true;
+
+    if (!PostMessageW(
+        object3Window,
+        MatrixProtocol::ReadMatrixMessage,
+        reinterpret_cast<WPARAM>(hWnd),
+        0))
+    {
+        StopObject3Waiting(hWnd);
+
+        MessageBoxW(
+            hWnd,
+            L"Cannot send the request to Object3.",
+            L"Communication error",
+            MB_OK | MB_ICONERROR
+        );
+    }
+}
+
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
                      _In_ LPWSTR    lpCmdLine,
@@ -475,7 +657,39 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             CheckObject2Startup(hWnd);
             return 0;
         }
+
+        if (wParam == Object3WorkTimer)
+        {
+            CheckObject3Work(hWnd);
+            return 0;
+        }
+
         return DefWindowProcW(hWnd, message, wParam, lParam);
+    case MatrixProtocol::MatrixResultMessage:
+    {
+        const HWND sender = reinterpret_cast<HWND>(lParam);
+
+        if (!waitingForObject3 ||
+            !object3RequestSent ||
+            sender != object3Window)
+        {
+            return 0;
+        }
+
+        StopObject3Waiting(hWnd);
+
+        if (wParam == 0)
+        {
+            MessageBoxW(
+                hWnd,
+                L"Object3 could not process the matrix. Check its window.",
+                L"Calculation error",
+                MB_OK | MB_ICONERROR
+            );
+        }
+
+        return 0;
+    }
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
@@ -484,11 +698,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             {
             case IDM_RUN:
             {
-                if (waitingForObject2)
+                if (waitingForObject2 || waitingForObject3)
                 {
                     MessageBoxW(
                         hWnd,
-                        L"Object2 is starting. Please wait.",
+                        L"A calculation is in progress. Please wait.",
                         L"Lab6",
                         MB_OK | MB_ICONINFORMATION
                     );
