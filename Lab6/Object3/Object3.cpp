@@ -3,6 +3,12 @@
 
 #include "framework.h"
 #include "Object3.h"
+#include <algorithm>
+#include <cmath>
+#include <iomanip>
+#include <sstream>
+#include <string>
+#include <vector>
 
 #define MAX_LOADSTRING 100
 
@@ -16,6 +22,215 @@ ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
+
+namespace
+{
+    std::wstring resultText = L"Waiting for a matrix.";
+
+    bool ReadClipboardText(HWND hWnd, std::wstring& text)
+    {
+        text.clear();
+
+        if (!IsClipboardFormatAvailable(CF_UNICODETEXT))
+        {
+            return false;
+        }
+
+        if (!OpenClipboard(hWnd))
+        {
+            return false;
+        }
+
+        HANDLE memory = GetClipboardData(CF_UNICODETEXT);
+
+        if (memory == nullptr)
+        {
+            CloseClipboard();
+            return false;
+        }
+
+        const SIZE_T bytes = GlobalSize(memory);
+
+        // Our matrix text is small. Reject unexpectedly large data.
+        if (bytes < sizeof(wchar_t) || bytes > 65536)
+        {
+            CloseClipboard();
+            return false;
+        }
+
+        const wchar_t* source =
+            static_cast<const wchar_t*>(GlobalLock(memory));
+
+        if (source == nullptr)
+        {
+            CloseClipboard();
+            return false;
+        }
+
+        const size_t capacity = bytes / sizeof(wchar_t);
+        size_t length = 0;
+
+        while (length < capacity && source[length] != L'\0')
+        {
+            ++length;
+        }
+
+        const bool valid = length < capacity;
+
+        if (valid)
+        {
+            text.assign(source, length);
+        }
+
+        GlobalUnlock(memory);
+        CloseClipboard();
+
+        return valid;
+    }
+
+    bool ParseMatrix(
+        const std::wstring& text,
+        int& size,
+        std::vector<double>& values)
+    {
+        std::wistringstream input(text);
+
+        if (!(input >> size) || size < 1 || size > 10)
+        {
+            return false;
+        }
+
+        values.clear();
+        values.reserve(static_cast<size_t>(size) * size);
+
+        for (int i = 0; i < size * size; ++i)
+        {
+            int value = 0;
+
+            if (!(input >> value) || value < -1000 || value > 1000)
+            {
+                return false;
+            }
+
+            values.push_back(static_cast<double>(value));
+        }
+
+        // Only whitespace may follow the last matrix element.
+        input >> std::ws;
+        return input.eof();
+    }
+
+    double CalculateDeterminant(
+        std::vector<double> values,
+        int size)
+    {
+        double determinant = 1.0;
+
+        for (int column = 0; column < size; ++column)
+        {
+            // Choose the largest available pivot by absolute value.
+            int pivotRow = column;
+
+            for (int row = column + 1; row < size; ++row)
+            {
+                if (std::abs(values[row * size + column]) >
+                    std::abs(values[pivotRow * size + column]))
+                {
+                    pivotRow = row;
+                }
+            }
+
+            const double pivotCandidate =
+                values[pivotRow * size + column];
+
+            if (pivotCandidate == 0.0)
+            {
+                return 0.0;
+            }
+
+            if (pivotRow != column)
+            {
+                for (int j = 0; j < size; ++j)
+                {
+                    std::swap(
+                        values[column * size + j],
+                        values[pivotRow * size + j]
+                    );
+                }
+
+                determinant = -determinant;
+            }
+
+            const double pivot =
+                values[column * size + column];
+
+            determinant *= pivot;
+
+            for (int row = column + 1; row < size; ++row)
+            {
+                const double factor =
+                    values[row * size + column] / pivot;
+
+                values[row * size + column] = 0.0;
+
+                for (int j = column + 1; j < size; ++j)
+                {
+                    values[row * size + j] -=
+                        factor * values[column * size + j];
+                }
+            }
+        }
+
+        return determinant;
+    }
+
+    bool ProcessClipboardMatrix(HWND hWnd)
+    {
+        std::wstring text;
+
+        if (!ReadClipboardText(hWnd, text))
+        {
+            resultText =
+                L"Cannot read Unicode text from the clipboard.";
+
+            InvalidateRect(hWnd, nullptr, TRUE);
+            return false;
+        }
+
+        int size = 0;
+        std::vector<double> values;
+
+        if (!ParseMatrix(text, size, values))
+        {
+            resultText =
+                L"Invalid matrix format.\r\n"
+                L"Expected: n followed by n*n integers.\r\n"
+                L"n: 1..10; elements: -1000..1000.";
+
+            InvalidateRect(hWnd, nullptr, TRUE);
+            return false;
+        }
+
+        const double determinant =
+            CalculateDeterminant(values, size);
+
+        std::wostringstream output;
+
+        output << L"Matrix size: "
+            << size << L" x " << size
+            << L"\r\n\r\nDeterminant = "
+            << std::setprecision(15)
+            << determinant
+            << L"\r\n\r\nMethod: Gaussian elimination "
+            << L"with partial pivoting.";
+
+        resultText = output.str();
+
+        InvalidateRect(hWnd, nullptr, TRUE);
+        return true;
+    }
+
+}
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -125,6 +340,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
+    case WM_CREATE:
+        // Temporary trigger for testing before automatic coordination.
+        ProcessClipboardMatrix(hWnd);
+        return 0;
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
@@ -143,13 +362,28 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         break;
     case WM_PAINT:
-        {
-            PAINTSTRUCT ps;
-            BeginPaint(hWnd, &ps);
-            // TODO: Add any drawing code here...
-            EndPaint(hWnd, &ps);
-        }
-        break;
+    {
+        PAINTSTRUCT ps{};
+        HDC hdc = BeginPaint(hWnd, &ps);
+
+        RECT area{};
+        GetClientRect(hWnd, &area);
+        InflateRect(&area, -16, -16);
+
+        SetBkMode(hdc, TRANSPARENT);
+        SetTextColor(hdc, RGB(0, 0, 0));
+
+        DrawTextW(
+            hdc,
+            resultText.c_str(),
+            -1,
+            &area,
+            DT_LEFT | DT_WORDBREAK | DT_NOPREFIX
+        );
+
+        EndPaint(hWnd, &ps);
+        return 0;
+    }
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
